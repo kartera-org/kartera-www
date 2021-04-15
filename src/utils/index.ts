@@ -4,7 +4,7 @@ import Web3 from "web3";
 import { provider, TransactionReceipt } from "web3-core";
 import { AbiItem, isAddress } from "web3-utils";
 
-import ERC20ABI from "constants/abi/ERC20.json";
+import ERC20 from "constants/abi/ERC20.json";
 
 export const sleep = (ms: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -26,13 +26,14 @@ export const approve = async (
   spenderAddress: string,
   tokenAddress: string,
   provider: provider,
+  amount: string,
   onTxHash?: (txHash: string) => void
 ): Promise<boolean> => {
   try {
     const tokenContract = getERC20Contract(provider, tokenAddress);
-    return tokenContract.methods
-      .approve(spenderAddress, ethers.constants.MaxUint256)
-      .send({ from: userAddress, gas: 80000 }, async (error: any, txHash: string) => {
+    return tokenContract
+      .approve(spenderAddress, amount)
+      .send({ from: userAddress }, async (error: any, txHash: string) => {
         if (error) {
           console.log("ERC20 could not be approved", error);
           onTxHash && onTxHash("");
@@ -54,29 +55,89 @@ export const approve = async (
   }
 };
 
+export const ApproveTransfer = async (provider:any, tokenAddress:string, receiverAddress:string, numberOfTokens:string):Promise<string>=>{
+  let signer = await provider.getSigner(0);
+  let contract = getERC20Contract(provider, tokenAddress);
+  try{
+      let res = await contract.connect(signer).approve(receiverAddress, numberOfTokens);
+      console.log('approve tx: ', res );
+      return res['hash'];
+  }catch(e){
+      throw(e);
+  }
+}
+
 export const getAllowance = async (userAddress: string, spenderAddress: string, tokenAddress: string, provider: provider): Promise<string> => {
   try {
     const tokenContract = getERC20Contract(provider, tokenAddress);
-    const allowance: string = await tokenContract.methods.allowance(userAddress, spenderAddress).call();
+    const allowance: string = await tokenContract.allowance(userAddress, spenderAddress);
     return allowance;
   } catch (e) {
     return "0";
   }
 };
 
-export const getBalance = async (provider: provider, tokenAddress: string, userAddress: string): Promise<string> => {
-  const tokenContract = getERC20Contract(provider, tokenAddress);
+export const getEthBalance = async (provider: any, userAddress: string): Promise<string> => {
   try {
-    const balance: string = await tokenContract.methods.balanceOf(userAddress).call();
-    return balance;
+    let balance = await provider.getBalance(userAddress);
+    let formattedBal = parseFloat(ethers.utils.formatUnits(balance, 18));
+    let bal = formattedBal.toFixed(4);
+    return bal;
   } catch (e) {
     return "0";
   }
 };
 
-export const getERC20Contract = (provider: provider, address: string) => {
-  const web3 = new Web3(provider);
-  const contract = new web3.eth.Contract((ERC20ABI.abi as unknown) as AbiItem, address);
+export const getBalance = async (provider: any, tokenAddress: string, userAddress: string, decimals:number): Promise<string> => {
+  const tokenContract = getERC20Contract(provider, tokenAddress);
+  try {
+    let balance: string = await tokenContract.balanceOf(userAddress);
+    let formattedBal = parseFloat(ethers.utils.formatUnits(balance, decimals));
+    let bal = formattedBal.toFixed(4);
+    return bal;
+  } catch (e) {
+    return "0";
+  }
+};
+
+export const TotalSupply = async (provider:any, tokenAddress:string) =>{
+  const contract = getERC20Contract(provider, tokenAddress);
+  let totalsupply = await contract.totalSupply();
+  return totalsupply;
+}
+
+export const Name = async (provider:any, tokenAddress:string) =>{
+  const contract = getERC20Contract(provider, tokenAddress);
+  try {
+    let name = await contract.name();
+    return name;
+  } catch(e){
+    return '';
+  }
+}
+
+export const Symbol = async (provider:any, tokenAddress:string) =>{
+  const contract = getERC20Contract(provider, tokenAddress);
+  try {
+    let n = await contract.symbol();
+    return n;
+  } catch(e){
+    return '';
+  }
+}
+
+export const Decimals = async (provider:any, tokenAddress:string) =>{
+  const contract = getERC20Contract(provider, tokenAddress);
+  try {
+    const n:number = await contract.decimals();
+    return n;
+  } catch(e){
+    throw(e);
+  }
+}
+
+export const getERC20Contract = (provider: any, address: string) => {
+  const contract = new ethers.Contract(address, ERC20.abi, provider);
   return contract;
 };
 

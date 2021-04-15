@@ -4,8 +4,8 @@ import {Button, Modal, Typography} from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 
 interface MessageModalI{
-  header:string,
-  message:string,
+  header?:string,
+  message?:string,
   state:boolean,
   handleClose(): void
 }
