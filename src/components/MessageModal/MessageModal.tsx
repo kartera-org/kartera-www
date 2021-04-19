@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { makeStyles } from '@material-ui/core/styles';
 import {Button, Modal, Typography} from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
@@ -7,6 +8,7 @@ interface MessageModalI{
   header?:string,
   message?:string,
   state:boolean,
+  link?:string,
   handleClose(): void
 }
 
@@ -53,6 +55,12 @@ function rand(){
           <div style={{display:'flex', flexDirection:'column', justifyContent:'center'}}>
               {props.message}
           </div>
+          {props.link && props.link!==""?
+            <div style={{display:'flex', flexDirection:'column', justifyContent:'center'}}>
+            <Link to={{pathname:`https://etherscan.io/tx/${props.link}`}} target="_blank" >Check on etherscan</Link>
+            </div>
+            :<></>
+          }
         </div>
       </div>
     );

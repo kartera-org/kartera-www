@@ -8,7 +8,7 @@ interface buttonI{
     color?:string;
 }
 
-const Button : React.FC<buttonI> = ({text, onClick, backgroundColor, color}) =>{
+const SmallButton : React.FC<buttonI> = ({text, onClick, backgroundColor, color}) =>{
 
     return(
         <StyledButton onClick={onClick} style={{backgroundColor:backgroundColor?backgroundColor:"#18273F"}}>
@@ -23,16 +23,12 @@ const StyledButton = styled.div`
     margin: 10px;
     justify-content: center;
     align-items: center;
-    width: 150px;
-    min-height: 35px;
-    font-size: max(min(18px, 4.5vw), 12px);
+    font-size: max(min(14px, 4.5vw), 12px);
     font-weight:500;
     border-radius: 5px;
-    padding: 10px 20px;
-    border: 2px solid transparent;
+    padding: 5px 10px;
     cursor: pointer;
     @media (max-width: 770px){
-        width: 35%;
     }
 `;
 
@@ -45,6 +41,9 @@ const StyledLink = styled.a`
     &:hover{
         opacity: 1;
     }
+    @media (max-width: 770px){
+        opacity: 1;
+    }
 `;
 
-export default Button;
+export default SmallButton;

@@ -21,36 +21,66 @@ const Provider: React.FC = ({ children }) => {
       async (userAddress: string, provider: any) => {
         let tBasket:BasketI[] = new Array();
         for(let i=0; i<BasketAddresses.length; i++){
-          let basket_i:BasketI = {address:BasketAddresses[i]};
-          basket_i.name = await utils.Name(provider, BasketAddresses[i]);
-          basket_i.symbol = await utils.Symbol(provider, BasketAddresses[i]);
-          basket_i.decimals = await utils.Decimals(provider, BasketAddresses[i]);
-          basket_i.price = await basketFunc.BasketPrice(provider, BasketAddresses[i]);
-          basket_i.numberOfConstituents = await basketFunc.NumberOfConstituents(provider, BasketAddresses[i]);
-          let n = basket_i.numberOfConstituents?basket_i.numberOfConstituents : 0;
-          basket_i.numberOfActiveConstituents = await basketFunc.NumberOfActiveConstituents(provider, BasketAddresses[i]);
-          basket_i.constituents = new Array();
+          let basket_i:BasketI = {
+            address:BasketAddresses[i],
+            name: "",
+            symbol: "",
+            decimals: 18,
+            price: "",
+            numberOfConstituents: 0,
+            numberOfActiveConstituents: 0,
+            userBalance: "",
+            totalSupply: "",
+            constituents: new Array()
+          };
+          let n=0;
+          try{
+            basket_i.name = await utils.Name(provider, BasketAddresses[i]);
+            basket_i.symbol = await utils.Symbol(provider, BasketAddresses[i]);
+            basket_i.decimals = await utils.Decimals(provider, BasketAddresses[i]);
+            basket_i.price = await basketFunc.BasketPrice(provider, BasketAddresses[i]);
+            basket_i.numberOfConstituents = await basketFunc.NumberOfConstituents(provider, BasketAddresses[i]);
+            n = basket_i.numberOfConstituents?basket_i.numberOfConstituents : 0;
+            basket_i.numberOfActiveConstituents = await basketFunc.NumberOfActiveConstituents(provider, BasketAddresses[i]);
+            basket_i.totalSupply = await utils.TotalSupply(provider, BasketAddresses[0]);
+          }catch(e){}
           for(let j=0; j < n; j++){
-            let constituentAddress = await basketFunc.ConstituentAddress(provider, BasketAddresses[i], j);
-            let constituentInfo = await basketFunc.ConstituentDetails(provider, BasketAddresses[i],constituentAddress);
-
-            let cons:ConstituentI = {address:constituentAddress};
+            let constituentAddress='';
+            let constituentInfo;
+            try{
+              constituentAddress = await basketFunc.ConstituentAddress(provider, BasketAddresses[i], j);
+              constituentInfo = await basketFunc.ConstituentDetails(provider, BasketAddresses[i],constituentAddress);
+            }catch(e){}
+            let cons:ConstituentI = {
+              address:constituentAddress,
+              name: "",
+              symbol: "",
+              decimals: 18,
+              active: true,
+              basketBalance: "",
+              exchangeRate: "",
+              userBalance: "",
+            };
+            try{
+              let details =await basketFunc.ConstituentDetails(provider, BasketAddresses[0], constituentAddress);
+              cons.active = details[1];
+              cons.decimals = details[3];
+              cons.basketBalance = ethers.utils.formatUnits(details[2], cons.decimals);
+              cons.exchangeRate = await basketFunc.ExchangeRate(provider, BasketAddresses[0], constituentAddress);
+            }catch(e){}
             if(constituentAddress==basketFunc.addr1){
               cons.name = "Ether";
               cons.symbol = "Eth";
-              cons.decimals = 18;
-              cons.basketBalance = await utils.getEthBalance(provider, BasketAddresses[0]);
-              cons.exchangeRate = await basketFunc.ExchangeRate(provider, BasketAddresses[0], constituentAddress);
-              cons.userBalance = await utils.getEthBalance(provider, userAddress);
+              try{
+                cons.userBalance = await utils.getEthBalance(provider, userAddress);
+              }catch(e){}
             }else{
-              cons.name = await utils.Name(provider, constituentAddress);
-              cons.symbol = await utils.Symbol(provider, constituentAddress);
-              cons.decimals = await utils.Decimals(provider, constituentAddress);
-              cons.basketBalance = await utils.getBalance(provider, constituentAddress, BasketAddresses[0], cons.decimals);
-              cons.exchangeRate = await basketFunc.ExchangeRate(provider, BasketAddresses[0], constituentAddress);
-              cons.userBalance = await utils.getBalance(provider, constituentAddress, userAddress, cons.decimals);
-          }
-
+              try{
+                cons.name = await utils.Name(provider, constituentAddress);
+                cons.symbol = await utils.Symbol(provider, constituentAddress);
+                cons.userBalance = await utils.getBalance(provider, constituentAddress, userAddress, cons.decimals);
+              }catch(e){}
+            }
             basket_i.constituents.push(cons);
           }
           basket_i.userBalance = await utils.getBalance(provider, BasketAddresses[i], userAddress, 18);
@@ -69,24 +99,60 @@ const Provider: React.FC = ({ children }) => {
       async (basketAddress:string, tokenAddress:string, amount: string) =>{
         setProcessingTx(true);
         try{
-          const contract = utils.getERC20Contract(library, tokenAddress);
-          let tx = await utils.ApproveTransfer(library, tokenAddress, basketAddress, amount);
-          console.log('approval tx hash: ',  tx);
-          tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
-          let msg = 'Approval transaction ID: ' + tx;
-          setTxMessage(msg);
-          let done = false;
-          contract.on('Approval', async (owner, spender, value, evnt)=>{
-            if(!done){
-              done=true;
-              let tx = await basketFunc.MakeDeposit(library, basketAddress, tokenAddress, amount);
+          if(tokenAddress == basketFunc.addr1) {
+            try{
+              let tx = await basketFunc.MakeEthDeposit(library, basketAddress, amount);
               console.log('make deposit tx hash: ',  tx);
               tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
               let msg = 'Deposit complete. TXID: ' + tx;
               setTxMessage(msg);
               setProcessingTx(false);
+            }catch(e){
+              setTxMessage(`Transaction failed: ${e.message}`);
+              setProcessingTx(false);
             }
-          });
+          }else{
+            let allowance = await utils.getAllowance(basketAddress, tokenAddress, library, account);
+            console.log('allowance: ', allowance.toString() );
+        
+            if(new BigNumber(allowance.toString()).gte(new BigNumber(amount))){
+              try{
+                let tx = await basketFunc.MakeDeposit(library, basketAddress, tokenAddress, amount);
+                console.log('make deposit tx hash: ',  tx);
+                tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
+                let msg = 'Deposit complete. TXID: ' + tx;
+                setTxMessage(msg);
+                setProcessingTx(false);
+              }catch(e){
+                setTxMessage(`Transaction failed: ${e.message}`);
+                setProcessingTx(false);
+              }
+            }else{
+              const contract = utils.getERC20Contract(library, tokenAddress);
+              let tx = await utils.ApproveTransfer(library, tokenAddress, basketAddress);
+              console.log('approval tx hash: ',  tx);
+              tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
+              let msg = 'Approval transaction ID: ' + tx;
+              setTxMessage(msg);
+              let done = false;
+              contract.on('Approval', async (owner, spender, value, evnt)=>{
+                if(!done){
+                  try{
+                    done=true;
+                    let tx = await basketFunc.MakeDeposit(library, basketAddress, tokenAddress, amount);
+                    console.log('make deposit tx hash: ',  tx);
+                    tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
+                    let msg = 'Deposit complete. TXID: ' + tx;
+                    setTxMessage(msg);
+                    setProcessingTx(false);
+                  }catch(e){
+                    setTxMessage(`Transaction failed: ${e.message}`);
+                    setProcessingTx(false);
+                  }
+                }
+              });
+            }
+          }
         } catch ( e ) {
             setTxMessage(`Transaction failed: ${e.message}`);
             setProcessingTx(false);
@@ -104,7 +170,26 @@ const Provider: React.FC = ({ children }) => {
           const tokensreturned = await basketFunc.ActualWithdrawCost(library, basketAddress, amount);
           console.log('tokensreturned: ', tokensreturned.toString() );
 
-          let tx = await utils.ApproveTransfer(library, KarteraTokenAddress, basketAddress, tokensreturned);
+          let allowance = await utils.getAllowance(basketAddress, KarteraTokenAddress, library, account);
+          console.log('allowance: ', allowance.toString() );
+      
+          if(new BigNumber(allowance.toString()).gte(new BigNumber(amount))){
+            try{
+              let tx = await basketFunc.WithdrawLiquidity(library, basketAddress, tokenAddress, amount);
+              console.log('Withdraw transaction tx hash: ',  tx);
+              tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
+              let msg = 'Withdraw transaction complete. TXID: ' + tx;
+              setTxMessage(msg);
+              setProcessingTx(false);
+              return;
+            }catch( e ) {
+              setTxMessage(`Transaction failed: ${e.message}`);
+              setProcessingTx(false);
+              return;
+            }
+          }
+
+          let tx = await utils.ApproveTransfer(library, KarteraTokenAddress, basketAddress);
           console.log('approval tx hash: ',  tx);
 
           tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
@@ -135,6 +220,84 @@ const Provider: React.FC = ({ children }) => {
       [setTxMessage, setProcessingTx, library]
     );
 
+    const handleSwap = useCallback(
+      async (basketAddress:string, tokenAddressFrom:string, tokenAddressTo:string, amount:string) =>{
+        setProcessingTx(true);
+
+        console.log('testing account #: ', account );
+
+        try{
+          if(tokenAddressFrom==basketFunc.addr1){
+            let tx = await basketFunc.SwapEth(library, basketAddress, tokenAddressFrom, tokenAddressTo, amount);
+            console.log('Swap transaction tx hash: ',  tx);
+            tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
+            let msg = 'Swap transaction complete. TXID: ' + tx;
+            setTxMessage(msg);
+            setProcessingTx(false);
+          }else{
+            const contract = utils.getERC20Contract(library, tokenAddressFrom);
+
+            let allowance = await utils.getAllowance(basketAddress, tokenAddressFrom, library, account);
+            console.log('allowance: ', allowance.toString() );
+        
+            if(new BigNumber(allowance.toString()).gte(new BigNumber(amount))){
+              console.log('here inside direct swap: ',  );
+              try{
+                let tx = await basketFunc.Swap(library, basketAddress, tokenAddressFrom, tokenAddressTo, amount);
+                console.log('Swap transaction tx hash: ',  tx);
+                tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
+                let msg = 'Swap transaction complete. TXID: ' + tx;
+                setTxMessage(msg);
+                setProcessingTx(false);
+              }catch(e){
+                setTxMessage(`Swap failed: ${e.message}`);
+                setProcessingTx(false);
+              }
+            }else{
+              let tx = await utils.ApproveTransfer(library, tokenAddressFrom, basketAddress);
+              tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
+              let msg = 'Approval transaction ID: ' + tx;
+              setTxMessage(msg);
+              let done = false;
+              contract.on('Approval', async (owner, spender, value, evnt)=>{
+                if(!done){
+                  done=true;
+                  try{
+                    done=true;
+                    let tx = await basketFunc.Swap(library, basketAddress, tokenAddressFrom, tokenAddressTo, amount);
+                    console.log('Swap transaction tx hash: ',  tx);
+                    tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
+                    let msg = 'Swap transaction complete. TXID: ' + tx;
+                    setTxMessage(msg);
+                    setProcessingTx(false);
+                  }catch(e){
+                    setTxMessage(`Swap failed: ${e.message}`);
+                    setProcessingTx(false);
+                  }
+                }
+              })
+            }
+          }
+        } catch( e ) {
+          setTxMessage(`Swap failed: ${e.message}`);
+          setProcessingTx(false);
+        }
+      },
+      [setTxMessage, setProcessingTx, library]
+    );
+
+    const handleSwapRate = useCallback(
+      async (basketAddress:string, tokenAddressFrom:string, tokenAddressTo:string) =>{
+        try{
+          let rate = await basketFunc.SwapRate(library, basketAddress, tokenAddressFrom, tokenAddressTo);
+          return rate;
+        } catch( e ) {
+          return '0';
+        }
+      },
+      [setTxMessage, setProcessingTx, library]
+    );
+
     useEffect(() => {
       if (account && library) {
         fetchAllBasketInfo(account, library);
@@ -158,7 +321,9 @@ const Provider: React.FC = ({ children }) => {
             unsetTxMessage: unsetTxMessage,
             baskets,
             deposit: handleDeposit,
-            withdraw: handleWithdraw
+            withdraw: handleWithdraw,
+            swap: handleSwap,
+            swapRate: handleSwapRate
           }}
         >
           {children}

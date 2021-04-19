@@ -18,9 +18,11 @@ const FooterContainer = styled.div`
     background-image: linear-gradient(to bottom right, #150734, #28559A);
     justify-content: center;
     align-items: center;
+    height: 10vh;
     @media (max-width: 770px){
         flex-direction: column;
         align-items: center;
+        height: auto;
     }
 `;
 

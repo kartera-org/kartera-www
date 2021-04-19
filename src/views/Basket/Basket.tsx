@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { BigNumber } from "bignumber.js";
 import { ethers } from "ethers";
 import { TextField } from '@material-ui/core';
 import Button from "components/Button";
@@ -7,23 +9,22 @@ import MessageModal from "components/MessageModal";
 import ConstituentsModal from "components/ConstituentsModal";
 import copy from 'assets/copy.png';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-
-import useBaskets from "hooks/useBaskets";
-import { MakeDeposit } from "contexts/Basket/baskets";
-
 import CircularProgress from '@material-ui/core/CircularProgress';
 
+import useKartera from "hooks/useKartera";
+import useBaskets from "hooks/useBaskets";
+
 import getIcon from "components/Icons";
-// import eth from "assets/images/eth.png";
-// import link from "assets/images/link.png";
-// import wbtc from "assets/images/wbtc.png";
-// import uni from "assets/images/uni.png";
-// import aave from "assets/images/aave.png";
-// import snx from "assets/images/snx.png";
-// import mkr from "assets/images/mkr.png";
+import { numberWithCommas, displayAddress } from "utils/formatting";
+
+import { useWeb3React } from '@web3-react/core';
 
 const Basket: React.FC = () => {
 
+    const web3context = useWeb3React();
+    const { active } = web3context;
+
+    const {userBalance, ethBalance, accAddress} = useKartera();
     const { baskets, deposit, withdraw, txMessage, processingTx, unsetTxMessage } = useBaskets();
     const [ constituentModalState, setConstituentModalState ] = useState(false);
     const [ messageModalState, setMessageModalState] = useState(false);
@@ -32,7 +33,7 @@ const Basket: React.FC = () => {
     const [modalHeader, setModalHeader] = useState('');
 
     const [selectedTokenIndx, setSelectedTokenIndx] = useState<number>(-1);
-    const [numberOfTokens, setNumberOfTokens] = useState<number>(-1);
+    const [numberOfTokens, setNumberOfTokens] = useState<string>('');
 
     const handleClose = ()=>{
         setConstituentModalState(false);
@@ -52,6 +53,27 @@ const Basket: React.FC = () => {
             onlyNums = e.target.value;
         }
         setNumberOfTokens(onlyNums);
+    }
+
+    const IconImage = ()=>{
+        if(selectedTokenIndx>=0 && baskets && baskets[0].constituents){
+            const icon = getIcon(baskets[0].constituents[selectedTokenIndx].symbol);
+            return icon;
+        }else{
+            return null;
+        }
+    }
+
+    const depositAll = () => {
+        if(baskets){
+            setNumberOfTokens(baskets[0].constituents[selectedTokenIndx].userBalance)
+        }
+    }
+
+    const withdrawAll = () => {
+        if(baskets){
+            setNumberOfTokens(baskets[0].userBalance)
+        }
     }
 
     function handleDeposit() {
@@ -77,11 +99,12 @@ const Basket: React.FC = () => {
             setMessageModalState(true);
             return;
         }
-
-        if(numberOfTokens<=0){
+        let isLessThanMax = new BigNumber(numberOfTokens).lte(new BigNumber(baskets[0].constituents[selectedTokenIndx].userBalance));
+        if(parseFloat(numberOfTokens)<=0 || !isLessThanMax){
             setModalHeader("Error");
-            setModalMessage("Unable to deposit tokens, # of token should be >0.");
+            setModalMessage("Unable to deposit tokens, # of token should be >0 and <= wallet balance.");
             setMessageModalState(true);
+            setNumberOfTokens("");
             return;
         }
         setModalHeader("Message");
@@ -90,14 +113,14 @@ const Basket: React.FC = () => {
         try{
             basketaddr = baskets[0].address;
             tokenaddr = baskets[0].constituents[selectedTokenIndx].address;
-            amount = ethers.utils.parseEther(numberOfTokens.toString()).toString();
+            amount = ethers.utils.parseEther(numberOfTokens).toString();
             deposit(basketaddr, tokenaddr, amount);
         } catch (e) {
             setModalHeader("Message");
             setModalMessage("Something went wrong, transaction failed.");
             setMessageModalState(true);
         }
-        setNumberOfTokens(-1);
+        setNumberOfTokens("");
     }
 
     function handleWithdraw() {
@@ -111,7 +134,7 @@ const Basket: React.FC = () => {
             setMessageModalState(true);
             return;
         }
-        if(!baskets || !baskets[0].constituents){
+        if(!baskets){
             setModalHeader("Error");
             setModalMessage("Unable to deposit tokens, error retreiving baskets.");
             setMessageModalState(true);
@@ -123,10 +146,10 @@ const Basket: React.FC = () => {
             setMessageModalState(true);
             return;
         }
-
-        if(numberOfTokens<=0){
+        let isLessThanMax = new BigNumber(numberOfTokens).isLessThanOrEqualTo(baskets[0].userBalance)
+        if(parseFloat(numberOfTokens)<=0 || !isLessThanMax){
             setModalHeader("Error");
-            setModalMessage("Unable to deposit tokens, # of token should be >0.");
+            setModalMessage("Unable to deposit tokens, # of token should be >0 and <= wallet balance.");
             setMessageModalState(true);
             return;
         }
@@ -136,15 +159,23 @@ const Basket: React.FC = () => {
         try{
             basketaddr = baskets[0].address;
             tokenaddr = baskets[0].constituents[selectedTokenIndx].address;
-            amount = ethers.utils.parseUnits(numberOfTokens.toString(), 18).toString();
+            amount = ethers.utils.parseUnits(numberOfTokens, 18).toString();
             withdraw(basketaddr, tokenaddr, amount);
         } catch (e) {
             setModalHeader("Message");
             setModalMessage("Something went wrong, transaction failed.");
             setMessageModalState(true);
         }
-        setNumberOfTokens(-1);
+        setNumberOfTokens("");
 
+    }
+
+    const getBasketLiq = () => {
+        if(baskets){
+            let x = parseFloat(baskets[0].price) * parseFloat(baskets[0].totalSupply);
+            let ts = numberWithCommas(x.toFixed(4));
+            return(ts);                        
+        }
     }
 
     useEffect(()=>{
@@ -154,20 +185,18 @@ const Basket: React.FC = () => {
             setMessageModalState(true);
             unsetTxMessage();
         }
-    }, [txMessage])
-
-    const IconImage = ()=>{
-        if(selectedTokenIndx>=0 && baskets && baskets[0].constituents){
-            const icon = getIcon(baskets[0].constituents[selectedTokenIndx].symbol);
-            return icon;
-        }else{
-            return null;
-        }
-    }
+    }, [txMessage, ethBalance])
 
     return (
         <BasketContainer>
-            {baskets?
+            {
+            
+            !active?
+            
+            <div>Connect wallet to view baskets</div>
+            :
+
+            baskets?
             <>
             <MessageModal state={messageModalState} handleClose={closeMessageModal} message={modalMessage} header={modalHeader} />
             {baskets[0].constituents?
@@ -175,23 +204,17 @@ const Basket: React.FC = () => {
             :<></>
             }
             <Header>{`${baskets[0].name} (${baskets[0].symbol})`}</Header>
-
-            {/* <ContractAddressContainer>
-                {baskets[0].address}&nbsp;
-                <img src={copy} alt="copy" width="20px"/>
-            </ContractAddressContainer> */}
-
             <AddLiquidityCard>
-                <BlackText>Deposit Tokens</BlackText>
-
+                <BlackText>Add Liquidity &amp; Receive kETH Tokens </BlackText>
+                <BlackCaptionText>kETH is a diversified tokens that earns commissions from swap trades</BlackCaptionText>
                 <InputDiv>
-                   <TextField variant='filled' label={`# tokens : 0.0`} onChange={handleTextField} autoComplete='off' value={numberOfTokens>-1?numberOfTokens:''}/>
+                   <TextField variant='filled' label={`# tokens : 0.0`} onChange={handleTextField} autoComplete='off' value={parseFloat(numberOfTokens)>0?numberOfTokens:''}/>
                     <ChooseToken onClick={ ()=>{ setConstituentModalState(true)} } > 
                         <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                             {selectedTokenIndx>=0?
                                 <img src={`${IconImage()}`} alt="icon" width="25px" /> 
                             :<></>}&nbsp;
-                            {selectedTokenIndx>=0 && baskets[0].constituents? baskets[0].constituents[selectedTokenIndx].symbol : "Choose Token"}
+                            {selectedTokenIndx>=0 ? baskets[0].constituents[selectedTokenIndx].symbol.toUpperCase() : "Choose Token"}
                         </div>
                         <ExpandMoreIcon />
                     </ChooseToken>
@@ -199,15 +222,30 @@ const Basket: React.FC = () => {
 
                 <TokenActivityContainer>
 
-                    <div style={{flex:1}}>
-                    {selectedTokenIndx>=0 && baskets[0].constituents?
-                        <>
-                        <BlackItemText>{`Exchange Rate:  ${baskets[0].constituents[selectedTokenIndx].exchangeRate}`}</BlackItemText>
-                        <BlackItemText>{`Wallet Balance: ${baskets[0].constituents[selectedTokenIndx].userBalance}`}</BlackItemText>
-                        <BlackItemText>{`Basket Balance: ${baskets[0].constituents[selectedTokenIndx].basketBalance}`}</BlackItemText>
-                        </>
+                    <div style={{flex:2}}>
+                    {selectedTokenIndx>=0 ?
+                        <TokenInfoContainer>
+                            <BlackItemText>{`Exchange Rate:  ${parseFloat(baskets[0].constituents[selectedTokenIndx].exchangeRate).toFixed(4)} ${baskets[0].symbol}/${baskets[0].constituents[selectedTokenIndx].symbol.toUpperCase()}`}</BlackItemText>
+                            <BlackItemText style={{fontWeight:500}}>Wallet Balance </BlackItemText>
+                            <TokenRow>
+                                <BlackItemText>{`${numberWithCommas(baskets[0].constituents[selectedTokenIndx].userBalance)} ${baskets[0].constituents[selectedTokenIndx].symbol.toUpperCase()}`}</BlackItemText> &nbsp;
+                                <MaxButton onClick={()=>{depositAll()}}>Max</MaxButton>
+                            </TokenRow>
+                            <TokenRow>
+                                <BlackItemText>{`${numberWithCommas(baskets[0].userBalance)} kETH`}</BlackItemText> &nbsp;
+                                <MaxButton onClick={()=>{withdrawAll()}}>Max</MaxButton>
+                            </TokenRow>
+                            <BlackItemText>{`${numberWithCommas(userBalance)} KART`}</BlackItemText>
+                        </TokenInfoContainer>
                         :
-                        <></>
+                        <TokenInfoContainer>
+                            <BlackItemText style={{fontWeight:500}}>Wallet Balance </BlackItemText>
+                            <BlackItemText>{`${numberWithCommas(userBalance)} KART`}</BlackItemText>
+                            <BlackItemText>{`${numberWithCommas(ethBalance)} Eth`}</BlackItemText>
+                            <TokenRow>
+                                <BlackItemText><Link to={{pathname:`https://etherscan.io/address/${accAddress}`}} target="_blank" style={{textDecoration:'none'}}>{displayAddress(accAddress)}</Link></BlackItemText>
+                            </TokenRow>
+                        </TokenInfoContainer>
                     }
                     </div>
                     <div style={{display:'flex', flexDirection:'column', flex:1, justifyContent:'center', alignItems:'center'}}>
@@ -223,134 +261,184 @@ const Basket: React.FC = () => {
                 </TokenActivityContainer>
 
                 <ButtonGroup>
-                    <Button text={"Deposit"} onClick={()=>{handleDeposit()}}/>
-                    <Button text={"Withdraw"} onClick={()=>{handleWithdraw()}}/>
+                    <Button text={"Deposit"} backgroundColor={"#EE4400"} onClick={()=>{handleDeposit()}}/>
+                    <Button text={"Withdraw"} backgroundColor={"#EE4400"} onClick={()=>{handleWithdraw()}}/>
                 </ButtonGroup>
             </AddLiquidityCard>
             <BasketInfo>
-                <Text>{`Basket Token Price: $${baskets[0].price}`}</Text>
-                <Text>{`Basket Liquidity: $`}</Text>
-                <Text>{`Wallet Balance: ${baskets[0].userBalance} kETH`}</Text>
+                <Text>{`Basket Token Price: $${parseFloat(baskets[0].price).toFixed(4)}`}</Text>
+                <Text>{`Basket Liquidity: $${getBasketLiq()}`}</Text>
+                {
+                    selectedTokenIndx>=0?
+                    <Text>{`Basket Balance: ${parseFloat(baskets[0].constituents[selectedTokenIndx].basketBalance).toFixed(4)} ${baskets[0].constituents[selectedTokenIndx].symbol.toUpperCase()}`}</Text>
+                    :<></>
+                }
+                <ContractAddressContainer>
+                <Link to={{pathname:`https://etherscan.io/address/${baskets[0].address}`}} target="_blank" style={{textDecoration:'none', color:"white"}}>
+                    
+                    {`${displayAddress(baskets[0].address)}`} </Link> &nbsp;
+                    <img src={copy} alt="copy" width="20px" style={{cursor:"pointer"}} onClick={()=>{navigator.clipboard.writeText(baskets[0].address)}}/>
+                </ContractAddressContainer>
+
             </BasketInfo>
             </>
-            :
-            'Connect wallet to view baskets'}
+            : <>
+                <CircularProgress />
+                <div>Please wait</div>
+            </>
+                
+            }
+
         </BasketContainer>
       );
     };
 
-    const BasketContainer = styled.div`
-        display: flex;
+const BasketContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 81vh;
+    background-image: linear-gradient(to bottom right, #150734, #28559A);
+    color: white;
+`;
+
+const AddLiquidityCard = styled.div`
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    border-radius: 25px;
+    min-height: 250px;
+    padding: 20px;
+    @media (max-width: 770px){
+        padding: 5%;
+    }
+`;
+
+const Header = styled.div`
+    font-size: 30px;
+    font-weight: 700;
+    color: white;
+    text-transform: uppercase;
+    margin: 50px;
+    @media (max-width: 770px){
+        margin-top: 10px;
+    }
+`;
+
+const ContractAddressContainer = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 16px;
+    font-weight: 500;
+    color: white;
+    margin: 10px;
+`;
+
+const TokenActivityContainer = styled.div`
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+`;
+
+const Text = styled.div`
+    font-size: min(max(3.5vw, 18px), 20px);
+    font-weight: 400;
+    color: white;
+    margin: 5px 0;
+`;
+
+const BlackText = styled.div`
+    font-size: 20px;
+    font-weight: 400;
+    color: black;
+`;
+
+const BlackItemText = styled.div`
+    font-size: 14px;
+    font-weight: 400;
+    color: black;
+    margin: 7px 0;
+`;
+
+const ButtonGroup = styled.div`
+    display:flex;
+    justify-content: center;
+    @media (max-width: 770px){
         flex-direction: column;
-        padding-top: 50px;
         align-items: center;
-        min-height: 100vh;
-        background-image: linear-gradient(to bottom right, #150734, #28559A);
-        color: white;
-    `;
+    }
+`;
 
-    const AddLiquidityCard = styled.div`
-        display: flex;
+const InputDiv = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid lightgray;
+    border-radius: 10px;
+    padding: 10px;
+    margin: 20px;
+    @media (max-width: 770px){
         flex-direction: column;
-        background-color: white;
-        border-radius: 25px;
-        min-height: 250px;
-        padding: 20px;
-        @media (max-width: 770px){
-            padding: 5%;
-        }
-    `;
+    }
+`;
 
-    const Header = styled.div`
-        font-size: 30px;
-        font-weight: 700;
-        color: white;
-        text-transform: uppercase;
-        margin: 50px;
-        @media (max-width: 770px){
-            margin-top: 10px;
-        }
-    `;
+const TokenInfoContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    padding: 5px;
+`;
 
-    const ContractAddressContainer = styled.div`
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        font-size: 16px;
-        font-weight: 500;
-        color: white;
-        margin: 10px;
-    `;
+const BalanceLabel = styled.div`
+    font-size: 14px;
+    font-weight: 500;
+    color: gray;
+`;
 
-    const TokenActivityContainer = styled.div`
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-    `;
+const TokenRow = styled.div`
+    display: flex;
+    align-items: center;
+`;
 
-    const Text = styled.div`
-        font-size: min(max(3.5vw, 18px), 20px);
-        font-weight: 400;
-        color: white;
-        margin: 5px 0;
-    `;
+const MaxButton = styled.div`
+    background-color: #eee;
+    color: #bb44ee;
+    padding: 5px;
+    text-transform: uppercase;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+`;
 
-    const BlackText = styled.div`
-        font-size: 20px;
-        font-weight: 400;
-        color: black;
-    `;
+const ChooseToken = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #18273F;
+    width: 35%;
+    height: 30px;
+    padding: 10px;
+`;
 
-    const BlackItemText = styled.div`
-        font-size: 16px;
-        font-weight: 400;
-        color: black;
-        margin: 10px 0;
-    `;
-
-    const ChooseToken = styled.div`
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        color: #18273F;
-        width: 35%;
-        height: 30px;
+const BasketInfo = styled.div`
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: 50px 0;
+    @media (max-width: 770px){
         padding: 10px;
-    `;
+    }
+`;
 
-    const ButtonGroup = styled.div`
-        display:flex;
-        justify-content: center;
-        @media (max-width: 770px){
-            flex-direction: column;
-            align-items: center;
-        }
-    `;
 
-    const InputDiv = styled.div`
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border: 1px solid lightgray;
-        border-radius: 10px;
-        padding: 10px;
-        margin: 20px;
-        @media (max-width: 770px){
-            flex-direction: column;
-        }
-    `;
-
-    const BasketInfo = styled.div`
-        display: flex;
-        flex-direction: column;
-        flex-wrap: wrap;
-        align-items: center;
-        margin: 50px 0;
-        @media (max-width: 770px){
-            padding: 10px;
-        }
-    `;
-
+const BlackCaptionText = styled.div`
+font-size: 12px;
+font-weight: 250;
+color: black;
+`;
 
 
 export default Basket;

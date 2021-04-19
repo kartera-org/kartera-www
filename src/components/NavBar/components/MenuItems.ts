@@ -15,13 +15,13 @@ const MenuItems = [
         cName: 'menuItem'
     },
     {
-        title: 'Basket Farm',
-        url: '/basketFarm',
+        title: 'Farm',
+        url: '/farm',
         cName: 'menuItem'
     },
     {
-        title: 'Kartera Farm',
-        url: '/karteraFarm',
+        title: 'Governance',
+        url: '/governance',
         cName: 'menuItem'
     },
 ]

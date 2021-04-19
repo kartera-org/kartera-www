@@ -10,18 +10,19 @@ const AnimateImage: React.FC = () => {
     const [imgindx, setImgIndx] = useState(0);
 
     useEffect(()=>{
-        setTimeout(()=>{
+        let refreshInterval = setTimeout(()=>{
             let x = (imgindx+1)%names.length;
             setImgIndx(x);
             setImageName(names[x]);
-        }, 5000)
+        }, 6995)
+        return () => clearInterval(refreshInterval);
     }, [imageName])
 
     return(
         <Container>
-        <ImageDiv>
-            <img src={`${getIcon(imageName)}`} alt={imageName} width="250px" />
-        </ImageDiv>
+            <ImageDiv>
+                <img src={`${getIcon(imageName)}`} alt={imageName} width="250px" />
+            </ImageDiv>
         </Container>
     )
 }
@@ -38,7 +39,7 @@ const ImageDiv = styled.div`
     justify-content: center;
     align-items: center;
     max-width: 100%;
-    animation: ${coinAnimation} 5s infinite linear;
+    animation: ${coinAnimation} 7s infinite linear;
 `;
 
 const Container = styled.div`

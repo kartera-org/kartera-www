@@ -10,7 +10,7 @@ const Banner: React.FC = () => {
             <BannerDiv>
               <StyledText1>Diversified</StyledText1>
               <StyledText1>Token</StyledText1>
-              <StyledText1>Basket &</StyledText1>
+              <StyledText1>Basket &amp; </StyledText1>
               <StyledText1>Swap</StyledText1>
               <StyledText1>Protocol</StyledText1>
               <StyledText2> Kartera is the ultimate diversification protocol. Exposure to the basket allows anyone to diversify risk and earn return from swap trades done with the basket. </StyledText2>
@@ -32,7 +32,7 @@ const Banner: React.FC = () => {
         display: flex;
         flex:1;
         flex-direction: column;
-        align-self: center;
+        padding: 50px;
     `;
 
     const StyledText1 = styled.div`
@@ -44,7 +44,6 @@ const Banner: React.FC = () => {
 
     const StyledText2 = styled.div`
       margin-top: 5%;
-      padding: 10px;
       line-height: 1.25;
       font-size: 16px;
       font-weight: 400;
@@ -54,7 +53,7 @@ const Banner: React.FC = () => {
     const KarteraTokenContainer = styled.div`
       display: flex;
       flex-direction: column;
-      margin-top: 5%;
+      margin-top: 7%;
       @media (max-width: 770px) {
         display: none;
       }

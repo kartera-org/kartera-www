@@ -1,8 +1,6 @@
 import BigNumber from "bignumber.js";
 import { ethers } from "ethers";
-import Web3 from "web3";
-import { provider, TransactionReceipt } from "web3-core";
-import { AbiItem, isAddress } from "web3-utils";
+import { isAddress } from "web3-utils";
 
 import ERC20 from "constants/abi/ERC20.json";
 
@@ -10,56 +8,11 @@ export const sleep = (ms: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
-export const waitTransaction = async (provider: provider, txHash: string) => {
-  const web3 = new Web3(provider);
-  let txReceipt: TransactionReceipt | null = null;
-  while (txReceipt === null) {
-    const r = await web3.eth.getTransactionReceipt(txHash);
-    txReceipt = r;
-    await sleep(2000);
-  }
-  return txReceipt.status;
-};
-
-export const approve = async (
-  userAddress: string,
-  spenderAddress: string,
-  tokenAddress: string,
-  provider: provider,
-  amount: string,
-  onTxHash?: (txHash: string) => void
-): Promise<boolean> => {
-  try {
-    const tokenContract = getERC20Contract(provider, tokenAddress);
-    return tokenContract
-      .approve(spenderAddress, amount)
-      .send({ from: userAddress }, async (error: any, txHash: string) => {
-        if (error) {
-          console.log("ERC20 could not be approved", error);
-          onTxHash && onTxHash("");
-          return false;
-        }
-        if (onTxHash) {
-          onTxHash(txHash);
-        }
-        const status = await waitTransaction(provider, txHash);
-        if (!status) {
-          console.log("Approval transaction failed.");
-          return false;
-        }
-        return true;
-      });
-  } catch (e) {
-    console.log("error", e);
-    return false;
-  }
-};
-
-export const ApproveTransfer = async (provider:any, tokenAddress:string, receiverAddress:string, numberOfTokens:string):Promise<string>=>{
+export const ApproveTransfer = async (provider:any, tokenAddress:string, receiverAddress:string):Promise<string>=>{
   let signer = await provider.getSigner(0);
   let contract = getERC20Contract(provider, tokenAddress);
   try{
-      let res = await contract.connect(signer).approve(receiverAddress, numberOfTokens);
+      let res = await contract.connect(signer).approve(receiverAddress, ethers.constants.MaxUint256);
       console.log('approve tx: ', res );
       return res['hash'];
   }catch(e){
@@ -67,13 +20,16 @@ export const ApproveTransfer = async (provider:any, tokenAddress:string, receive
   }
 }
 
-export const getAllowance = async (userAddress: string, spenderAddress: string, tokenAddress: string, provider: provider): Promise<string> => {
+export const getAllowance = async (spenderAddress: string, tokenAddress: string, provider: any, userAddress:any): Promise<string> => {
+  const tokenContract = getERC20Contract(provider, tokenAddress);
+  let signer = await provider.getSigner(0);
   try {
-    const tokenContract = getERC20Contract(provider, tokenAddress);
+    console.log('signer: ', signer );
     const allowance: string = await tokenContract.allowance(userAddress, spenderAddress);
     return allowance;
   } catch (e) {
-    return "0";
+    console.log('error getting allowance: ', e );
+    throw (e);
   }
 };
 
@@ -81,28 +37,30 @@ export const getEthBalance = async (provider: any, userAddress: string): Promise
   try {
     let balance = await provider.getBalance(userAddress);
     let formattedBal = parseFloat(ethers.utils.formatUnits(balance, 18));
-    let bal = formattedBal.toFixed(4);
+    let bal = formattedBal.toString();
     return bal;
   } catch (e) {
-    return "0";
+    throw (e);
   }
 };
 
 export const getBalance = async (provider: any, tokenAddress: string, userAddress: string, decimals:number): Promise<string> => {
   const tokenContract = getERC20Contract(provider, tokenAddress);
   try {
-    let balance: string = await tokenContract.balanceOf(userAddress);
-    let formattedBal = parseFloat(ethers.utils.formatUnits(balance, decimals));
-    let bal = formattedBal.toFixed(4);
-    return bal;
+    let balance = await tokenContract.balanceOf(userAddress);
+    let formattedBal = ethers.utils.formatUnits(balance, decimals);
+    // let bal = formattedBal.toString();
+    return formattedBal;
   } catch (e) {
-    return "0";
+    console.log('error in getting balance: tknAddr:', tokenAddress, ' usrAddr', userAddress );
+    throw (e);
   }
-};
+}; 
 
 export const TotalSupply = async (provider:any, tokenAddress:string) =>{
   const contract = getERC20Contract(provider, tokenAddress);
   let totalsupply = await contract.totalSupply();
+  totalsupply = ethers.utils.formatUnits(totalsupply);
   return totalsupply;
 }
 
@@ -112,7 +70,7 @@ export const Name = async (provider:any, tokenAddress:string) =>{
     let name = await contract.name();
     return name;
   } catch(e){
-    return '';
+    throw(e);
   }
 }
 
@@ -122,7 +80,7 @@ export const Symbol = async (provider:any, tokenAddress:string) =>{
     let n = await contract.symbol();
     return n;
   } catch(e){
-    return '';
+    throw(e);
   }
 }
 
@@ -150,7 +108,7 @@ export const decToBn = (dec: number, decimals = 18) => {
 };
 
 export const getFullDisplayBalance = (balance: BigNumber, decimals = 18) => {
-  return balance.dividedBy(new BigNumber(10).pow(decimals)).toFixed();
+  return balance.dividedBy(new BigNumber(10).pow(decimals)).toString();
 };
 
 export const getNearestBlock = (from: Array<any>, target: number) => {

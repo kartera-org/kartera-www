@@ -18,7 +18,7 @@ export const NumberOfConstituents = async (provider:any, basketAddress:string) =
     }catch( e ) 
     {
         console.log('error in numberOfConstituents: ',  e);
-        return 0;
+        throw(e);
     }
 }
 
@@ -30,7 +30,7 @@ export const NumberOfActiveConstituents = async (provider:any, basketAddress:str
     }catch( e ) 
     {
         console.log('error in numberOfActiveConstituents: ',  e);
-        return 0;
+        throw(e);
     }
 }
 
@@ -40,7 +40,7 @@ export const ConstituentAddress = async (provider:any, basketAddress:string, ind
         let addr = await contract.constituentAddress(indx);
         return addr;
     }catch( e ) {
-        return '';
+        throw(e);
     }
 }
 
@@ -50,7 +50,7 @@ export const ConstituentDetails = async (provider:any, basketAddress:string, tok
         let details = await contract.constituentInfo(tokenAddress);
         return details;
     } catch ( e ) {
-        return [];
+        throw(e);
     }
 }
 
@@ -58,10 +58,10 @@ export const BasketPrice = async (provider:any, basketAddress:string) =>{
     const contract = getBasketContract(provider, basketAddress);
     try {
         let price = await contract.basketTokenPrice();
-        let prc = parseFloat(ethers.utils.formatUnits(price, 18)).toFixed(4);
+        let prc = parseFloat(ethers.utils.formatUnits(price, 18)).toString();
         return prc;
     } catch ( e ) {
-        return '';
+        throw(e);
     }
 }
 
@@ -69,10 +69,10 @@ export const ExchangeRate = async (provider:any, basketAddress:string, tokenAddr
     const contract = getBasketContract(provider, basketAddress);
     try {
         let exrate = await contract.exchangeRate(tokenAddress);
-        let exchangeRate =  parseFloat(ethers.utils.formatUnits(exrate, 18)).toFixed(4);
+        let exchangeRate =  parseFloat(ethers.utils.formatUnits(exrate, 18)).toString();
         return exchangeRate;
     } catch ( e ) {
-        return '';
+        throw(e);
     }
 }
 
@@ -82,7 +82,7 @@ export const WithdrawCost = async (provider:any, basketAddress:string) =>{
         let withdrawCost = await contract.withdrawCost(ethers.utils.parseEther('1'));
         return ethers.utils.formatUnits(withdrawCost, 18)
     } catch ( e ) {
-        return "0";
+        throw(e);
     }
 }
 
@@ -92,7 +92,7 @@ export const ActualWithdrawCost = async (provider:any, basketAddress:string, num
         let withdrawCost = await contract.withdrawCost(numberOfTokens);
         return withdrawCost
     } catch ( e ) {
-        return "0";
+        throw(e);
     }
 }
 
@@ -105,7 +105,6 @@ export const MakeEthDeposit = async (provider:any, basketAddress:string, numberO
     }catch( e ){
         console.log('error: ', e );
         throw(e);
-        return '';
     }
 }
 
@@ -135,7 +134,7 @@ export const WithdrawLiquidity = async (provider:any, basketAddress:string, toke
     }
 }
 
-export const Swap = async (provider:any, basketAddress:string, addrFrom:string, addrTo:string, numberOfTokens:BigNumber) =>{
+export const Swap = async (provider:any, basketAddress:string, addrFrom:string, addrTo:string, numberOfTokens:string) =>{
     const contract = getBasketContract(provider, basketAddress);
     let signer = await provider.getSigner(0);
     try{
@@ -143,8 +142,19 @@ export const Swap = async (provider:any, basketAddress:string, addrFrom:string, 
         return swaptx['hash'];
     }catch(e){
         console.log('error: ', e );
-        throw('error');
-        return '';
+        throw(e);
+    }
+}
+
+export const SwapEth = async (provider:any, basketAddress:string, addrFrom:string, addrTo:string, numberOfTokens:string) =>{
+    const contract = getBasketContract(provider, basketAddress);
+    let signer = await provider.getSigner(0);
+    try{
+        let deposittx = await contract.connect(signer).swap(addrFrom, addrTo, numberOfTokens, {value:numberOfTokens});
+        return deposittx['hash'];
+    }catch( e ){
+        console.log('error: ', e );
+        throw(e);
     }
 }
 
@@ -152,11 +162,11 @@ export const SwapRate = async (provider:any, basketAddress:string, addrFrom:stri
     const contract = getBasketContract(provider, basketAddress);
     try{
         let exrate = await contract.swapRate(addrFrom, addrTo);
-        return exrate;
+        let rate:string = exrate.toString();
+        return rate;
     }catch(e){
         console.log('error: ', e );
-        throw('error');
-        return;
+        throw(e);
     }
 }
 
@@ -167,6 +177,5 @@ export const TradingAllowed = async (provider:any, basketAddress:string) =>{
         return state;
     }catch(e){
         throw(e);
-        return;
     }
 }

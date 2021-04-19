@@ -76,7 +76,7 @@ const ConstituentsModal=(props:MessageModalI)=>{
 const ModalBody = styled.div`
     position: fixed;
     width: 600px;
-    top: 35%;
+    top: 50%;
     left: 50%;
     background-color: white;
     display: flex;
