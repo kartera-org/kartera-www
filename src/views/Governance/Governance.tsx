@@ -1,15 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { BigNumber } from "bignumber.js";
-import { ethers } from "ethers";
-import { TextField } from '@material-ui/core';
 import Button from "components/Button";
+import WalletButton from "components/WalletButton";
 import styled from "styled-components";
 import MessageModal from "components/MessageModal";
-import ConstituentsModal from "components/ConstituentsModal";
-import copy from 'assets/copy.png';
-
+import { displayAddress } from "utils/formatting"
 import CircularProgress from '@material-ui/core/CircularProgress';
+import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 
 import useGovernance from "hooks/useGovernance";
 import { useWeb3React } from '@web3-react/core';
@@ -19,17 +15,40 @@ const Governance: React.FC = () => {
     const { active } = web3context;
     const { proposals } = useGovernance();
 
+    const [modalHeader, setModalHeader] = useState('');
+    const [ messageModalState, setMessageModalState] = useState(false);
+    const [modalMessage, setModalMessage] = useState('');
+
+    const closeMessageModal = ()=>{
+        setMessageModalState(false);
+    }
+
+    const showInfoBox = () => {
+        setMessageModalState(true);
+        setModalHeader("Governance");
+        setModalMessage("Kartera protocol is governed by KART tokens. Holders of KART tokens have rights to make proposals and vote on proposals. KART tokens can be received by locking Kartera Basket Tokens in a Basket Farm.")
+    }
+
+
     return(
         <GovernanceContainer>
-            <HeaderContainer>
-                <Header>Kartera Governance</Header>
-                <CaptionText>Kartera tokens represent voting rights in Kartera Governance. You may vote on proposals or delegate your vote to a third party.</CaptionText>
-            </HeaderContainer>
+            <MessageModal state={messageModalState} handleClose={closeMessageModal} message={modalMessage} header={modalHeader} />
+
             {
             !active?
-            <div>Connect wallet</div>
+            <>
+            <Header>Connect your wallet <sup><HelpOutlineIcon fontSize="small" onClick={()=>showInfoBox()}/></sup></Header>
+            <br />
+            
+            <WalletButton large={true}/>
+            </>
             :
-            proposals?
+            <>
+            <HeaderContainer>
+                <Header>Governance<sup><HelpOutlineIcon fontSize="small" onClick={()=>showInfoBox()}/></sup></Header>
+                {/* <CaptionText>Kartera tokens represent voting rights in Kartera Governance. You may vote on proposals or delegate your vote to a third party.</CaptionText> */}
+            </HeaderContainer>
+            {proposals?
                 proposals.map((item, indx)=>(
                 <ProposalCard key={`proposal${indx}`}>
                     <ProposalRow>
@@ -38,7 +57,7 @@ const Governance: React.FC = () => {
                         <ProposalState style={{}}>{`${item?.stateName}`}</ProposalState>
                     </ProposalRow>
                     <ProposalRow style={{justifyContent:'center'}}>
-                        <ProposalItem>{`Target: ${item?.targets}`}</ProposalItem>
+                        <ProposalItem>{`Target: ${item.targets[0]?displayAddress(item.targets[0]):""}`}</ProposalItem>
                     </ProposalRow>
                     <ProposalRow style={{justifyContent:'center'}}>
                         <ProposalItem>{`Signature: ${item?.signature}`}</ProposalItem>
@@ -56,7 +75,11 @@ const Governance: React.FC = () => {
                 </ProposalCard>
                     
                 ))
-                :<CircularProgress />
+                :
+                <CircularProgress />
+                }
+                </>
+                
             }
             
         </GovernanceContainer>
@@ -101,6 +124,7 @@ color: white;
 
 const ProposalCard = styled.div`
     display: flex;
+    flex-wrap: wrap;
     flex-direction: column;
     background-color: white;
     border-radius: 10px;
@@ -111,8 +135,12 @@ const ProposalCard = styled.div`
 
 const ProposalRow = styled.div`
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     margin: 5px;
+    @media (max-width: 770px){
+        flex-direction: column;
+    }
 `;
 
 const ProposalId = styled.div`
@@ -142,6 +170,8 @@ const ProposalState = styled.div`
 
 const ProposalItem = styled.div`
     flex:2;
+    flex-wrap: break-word;
+    word-wrap: break-word;
     font-size: 20px;
     color: black;
     justify-self: flex-end;

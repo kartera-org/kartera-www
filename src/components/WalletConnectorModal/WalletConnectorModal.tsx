@@ -38,11 +38,11 @@ const WalletConnectorModal: React.FC<WCModalI> = ({state, onClose}) => {
         {
             localStorage.setItem("walletProvider", connector);
         }
-      }, [account, onClose, connector, activate]);
+      }, [account]);
 
       useEffect(() =>{
-          const walletProvider = localStorage.getItem("walletProvider");
-          if(walletProvider){
+        const walletProvider = localStorage.getItem("walletProvider");
+        if(walletProvider){
             setConnector(walletProvider);
           }
 
@@ -56,7 +56,9 @@ const WalletConnectorModal: React.FC<WCModalI> = ({state, onClose}) => {
                 <StyledBackdrop onClick={onClose} />
 
                 <WalletProvidersContainer>
-                    <Header>{"Select Wallet"}</Header>
+                    <HeaderContainer>
+                        <Header>{"Select Wallet"}</Header>
+                    </HeaderContainer>
                     <Body>
                         <WalletCard name={"MetaMask"} icon={metamaskLogo} onClick={handleConnectMetamask}></WalletCard>
                         
@@ -93,6 +95,11 @@ const WalletProvidersContainer = styled.div`
     left: 50%;
     z-index: 1000;
     transform: translate(-50%, -50%);
+`;
+
+const HeaderContainer = styled.div`
+    display: flex;
+    background: "#eee";
 `;
 
 const Header = styled.div`

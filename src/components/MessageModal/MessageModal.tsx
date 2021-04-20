@@ -48,11 +48,11 @@ function rand(){
     const body = (
       <div style={modalStyle} className={classes.paper}>
           <div style={{display:'flex', flexDirection:'column'}}>
-              <div style={{display:'flex', flexDirection:'row', justifyContent:'space-between'}}>
+              <div style={{display:'flex', alignItems:'center', justifyContent:'space-between' }}>
                   <Typography variant='h5'>{props.header}</Typography>
                   <Button size='large' onClick={props.handleClose}>X</Button>
               </div>
-          <div style={{display:'flex', flexDirection:'column', justifyContent:'center'}}>
+          <div style={{display:'flex', flexDirection:'column', justifyContent:'center', lineHeight:2}}>
               {props.message}
           </div>
           {props.link && props.link!==""?

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ethers } from "ethers";
 import { TextField } from '@material-ui/core';
-import Button from "components/Button";
+import WalletButton from "components/WalletButton";
 import styled from "styled-components";
 import CustomModal from "components/CustomModal";
 import MessageModal from "components/MessageModal";
@@ -11,6 +11,8 @@ import copy from 'assets/copy.png';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
 import CircularProgress from '@material-ui/core/CircularProgress';
+import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
+
 import getIcon from "components/Icons";
 import { numberWithCommas, formatDollar, displayAddress } from "utils/formatting"
 
@@ -252,6 +254,12 @@ const Swap: React.FC = () => {
         }
     }
 
+    const showInfoBox = () => {
+        setMessageModalState(true);
+        setModalHeader("Swaps");
+        setModalMessage("You may swap between any two basket tokens. All swap traded happen at mid market price from uniswap feed. 0.3% fees is applied to all trades draining upto 1% of tokens in the basket. Fees go up linearly with every percent increase in trade size. Max trade size is capped at 10%. For more details on swap transaction fees please refer to contracts and documents.")
+    }
+
     useEffect(()=>{
         if(txMessage!==''){
             setModalHeader("Transaction Message");
@@ -264,19 +272,26 @@ const Swap: React.FC = () => {
 
     return (
         <SwapContainer>
-
+            
             <>
             <CustomModal state ={cmState} message={cmMessage} header={cmHeader} handleClose={closeCMModal} />
+            <MessageModal state={messageModalState} handleClose={closeMessageModal} message={modalMessage} header={modalHeader} />
             {
             
             !active?
-                <div>Connect wallet to swap tokens</div>
+                <>
+                <Header>Connect wallet to swap tokens<sup><HelpOutlineIcon fontSize="small" onClick={()=>showInfoBox()}/></sup></Header>
+                <br />
+                
+                <WalletButton large={true}/>
+                </>
 
             :
 
             baskets?
             <>
-            <MessageModal state={messageModalState} handleClose={closeMessageModal} message={modalMessage} header={modalHeader} />
+            <Header>{`Swap Tokens`}<sup><HelpOutlineIcon fontSize="small" onClick={()=>showInfoBox()}/></sup></Header>
+            
             
             <ConstituentsModal state={fromConstituentModalState} handleClose={handleCloseFromConstituent} handleSelectToken={handleSelectFromToken} constituents={baskets[0].constituents} />
             
@@ -405,6 +420,18 @@ const SwapContainer = styled.div`
     min-height: 81vh;
     background-image: linear-gradient(to bottom right, #150734, #28559A);
     color: white;
+    padding: 20px;
+`;
+
+const Header = styled.div`
+    font-size: 30px;
+    font-weight: 700;
+    color: white;
+    text-transform: uppercase;
+    margin: 20px;
+    @media (max-width: 770px){
+        margin-top: 10px;
+    }
 `;
 
 const SwapCard = styled.div`

@@ -69,7 +69,7 @@ const MenuContainer = styled.div`
 const StyledNavBar = styled.div`
   background-image: linear-gradient(to bottom right, #150734, #28559A);
   color: white;
-  height: 9vh;
+  height:auto;
   align-items: center;
 `;
 

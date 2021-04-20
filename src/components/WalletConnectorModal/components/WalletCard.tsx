@@ -15,7 +15,7 @@ const WalletCard: React.FC<WalletCardI> = ({icon, name, onClick}) => (
             <img src={icon} width="35px" alt={name} />
         </WalletProviderImage>
         <WalletProviderTitle>{name}</WalletProviderTitle>
-        <SmallButton text={"Select"} onClick={onClick} backgroundColor={"#EE4400"} ></SmallButton>
+        <SmallButton text={"Select"} onClick={onClick} backgroundColor={"#00ce00"} ></SmallButton>
     </WalletProviderContainer>
 );
 
@@ -25,6 +25,9 @@ const WalletProviderContainer = styled.div`
     justify-content: center;
     width: 100%;
     padding: 5px;
+    &:hover{
+        background-color: #eee;
+    }
 `;
 
 const WalletProviderTitle = styled.div`

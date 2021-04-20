@@ -6,13 +6,14 @@ interface buttonI{
     onClick?:any;
     backgroundColor?:string;
     color?:string;
+    link?:string;
 }
 
-const SmallButton : React.FC<buttonI> = ({text, onClick, backgroundColor, color}) =>{
+const SmallButton : React.FC<buttonI> = ({text, onClick, backgroundColor, color, link}) =>{
 
     return(
-        <StyledButton onClick={onClick} style={{backgroundColor:backgroundColor?backgroundColor:"#18273F"}}>
-            <StyledLink style={{color:color?color:"#FFFFFF"}}>{text}</StyledLink>
+        <StyledButton onClick={onClick} style={{backgroundColor:backgroundColor?backgroundColor:"#18273F"}} >
+            <StyledLink href={link} style={{color:color?color:"#FFFFFF"}}>{text}</StyledLink>
         </StyledButton>
     )
 }

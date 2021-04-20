@@ -10,6 +10,7 @@ import ConstituentsModal from "components/ConstituentsModal";
 import copy from 'assets/copy.png';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import CircularProgress from '@material-ui/core/CircularProgress';
+import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 
 import useKartera from "hooks/useKartera";
 import useBaskets from "hooks/useBaskets";
@@ -18,6 +19,7 @@ import getIcon from "components/Icons";
 import { numberWithCommas, displayAddress } from "utils/formatting";
 
 import { useWeb3React } from '@web3-react/core';
+import WalletButton from "components/WalletButton"
 
 const Basket: React.FC = () => {
 
@@ -34,6 +36,8 @@ const Basket: React.FC = () => {
 
     const [selectedTokenIndx, setSelectedTokenIndx] = useState<number>(-1);
     const [numberOfTokens, setNumberOfTokens] = useState<string>('');
+
+    const [infoBox, setInfoBox] = useState(false);
 
     const handleClose = ()=>{
         setConstituentModalState(false);
@@ -178,6 +182,12 @@ const Basket: React.FC = () => {
         }
     }
 
+    const showInfoBox = () => {
+        setMessageModalState(true);
+        setModalHeader("Kartera Baskets");
+        setModalMessage("You may deposit your tokens in a Kartera Baket and receive equivalent number of basket tokens. Kartera basket tokens offer diversification by tracking  aggregate value of all deposited tokens. Liquidity in the baskets allow users to swap between different tokens for a small fee between. This fee is deposited in the basket generating returns in excess of just the perfomance of the deposited tokens. To withdraw tokens from the basket enter the number of tokens you wish to return. You may request any tokens to be exchanged for your basket tokens. ")
+    }
+
     useEffect(()=>{
         if(txMessage!==''){
             setModalHeader("Transaction Message");
@@ -189,21 +199,27 @@ const Basket: React.FC = () => {
 
     return (
         <BasketContainer>
+            <MessageModal state={messageModalState} handleClose={closeMessageModal} message={modalMessage} header={modalHeader} />
             {
+                
             
             !active?
-            
-            <div>Connect wallet to view baskets</div>
+            <>
+                <Header>Connect wallet to view baskets<sup><HelpOutlineIcon fontSize="small" onClick={()=>showInfoBox()}/></sup></Header>
+                <br />
+                
+                <WalletButton large={true}/>
+            </>
             :
 
             baskets?
             <>
-            <MessageModal state={messageModalState} handleClose={closeMessageModal} message={modalMessage} header={modalHeader} />
+            
             {baskets[0].constituents?
             <ConstituentsModal state={constituentModalState} handleClose={handleClose} handleSelectToken={handleSelectToken} constituents={baskets[0].constituents} />
             :<></>
             }
-            <Header>{`${baskets[0].name} (${baskets[0].symbol})`}</Header>
+            <Header>{`${baskets[0].name} (${baskets[0].symbol})`}<sup><HelpOutlineIcon fontSize="small" onClick={()=>showInfoBox()}/></sup></Header>
             <AddLiquidityCard>
                 <BlackText>Add Liquidity &amp; Receive kETH Tokens </BlackText>
                 <BlackCaptionText>kETH is a diversified tokens that earns commissions from swap trades</BlackCaptionText>
@@ -261,8 +277,8 @@ const Basket: React.FC = () => {
                 </TokenActivityContainer>
 
                 <ButtonGroup>
-                    <Button text={"Deposit"} backgroundColor={"#EE4400"} onClick={()=>{handleDeposit()}}/>
-                    <Button text={"Withdraw"} backgroundColor={"#EE4400"} onClick={()=>{handleWithdraw()}}/>
+                    <Button text={"Deposit"} onClick={()=>{handleDeposit()}}/>
+                    <Button text={"Withdraw"} onClick={()=>{handleWithdraw()}}/>
                 </ButtonGroup>
             </AddLiquidityCard>
             <BasketInfo>
@@ -270,7 +286,7 @@ const Basket: React.FC = () => {
                 <Text>{`Basket Liquidity: $${getBasketLiq()}`}</Text>
                 {
                     selectedTokenIndx>=0?
-                    <Text>{`Basket Balance: ${parseFloat(baskets[0].constituents[selectedTokenIndx].basketBalance).toFixed(4)} ${baskets[0].constituents[selectedTokenIndx].symbol.toUpperCase()}`}</Text>
+                    <Text>{`Basket Balance: ${numberWithCommas(baskets[0].constituents[selectedTokenIndx].basketBalance)} ${baskets[0].constituents[selectedTokenIndx].symbol.toUpperCase()}`}</Text>
                     :<></>
                 }
                 <ContractAddressContainer>
@@ -320,7 +336,7 @@ const Header = styled.div`
     font-weight: 700;
     color: white;
     text-transform: uppercase;
-    margin: 50px;
+    margin: 20px;
     @media (max-width: 770px){
         margin-top: 10px;
     }

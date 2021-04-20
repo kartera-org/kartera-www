@@ -45,7 +45,7 @@ export const GetProposals = async (provider: any)=>{
             let state = await govContract.state(id.toString());
             let stateName = ProposalState[state].val;
             let data = DecodeProposalData(proposalinfo[2][0], proposalinfo[3][0]);
-            let item = { id:id, description:description, signature:proposalinfo[2][0], proposer:proposer, targets:target, stateName:stateName, inputData:data, forVotes: proposal.forVotes, againstVotes:proposal.againstVotes}
+            let item = { id:id, description:description, signature:proposalinfo[2][0], proposer:proposer, targets:proposalinfo[0], stateName:stateName, inputData:data, forVotes: proposal.forVotes, againstVotes:proposal.againstVotes}
             proposals = [item, ...proposals];
         }
         return proposals;

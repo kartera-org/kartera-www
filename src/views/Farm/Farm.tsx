@@ -4,11 +4,13 @@ import { ethers } from "ethers";
 import { Link } from "react-router-dom";
 import { TextField } from '@material-ui/core';
 import Button from "components/SmallButton";
+import WalletButton from "components/WalletButton";
 import styled from "styled-components";
 import MessageModal from "components/MessageModal";
 import ConstituentsModal from "components/ConstituentsModal";
 import copy from 'assets/copy.png';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 
 import useKartera from "hooks/useKartera";
 import useBaskets from "hooks/useBaskets";
@@ -307,6 +309,12 @@ const Farm: React.FC = () => {
         setNumberOfKarteraTokens(kFarmUserBalance)
     }
 
+    const showInfoBox = () => {
+        setMessageModalState(true);
+        setModalHeader("Kartera Farms");
+        setModalMessage("Lock your basket tokens in BasketFarm to receive KART token rewards. KART tokens gives its holders a claim on swap fees and voting rights on governance proposals. Swap fees are collected by KART token holders what lock their tokens in Kartera Token Farm.")
+    }
+
     useEffect(()=>{
         if(txMessage!==''){
             setModalHeader("Transaction Message");
@@ -320,12 +328,17 @@ const Farm: React.FC = () => {
 
     return (
         <FarmContainer>
+        <MessageModal state={messageModalState} handleClose={closeMessageModal} message={modalMessage} header={modalHeader} link={modalLink}/>
         { !active?
-            <div>Please connect to wallet</div>
+            <>
+            <Header>Connect your wallet <sup><HelpOutlineIcon fontSize="small" onClick={()=>showInfoBox()}/></sup></Header>
+            <br />
+            
+            <WalletButton large={true}/>
+            </>
         :
         <>
-            <MessageModal state={messageModalState} handleClose={closeMessageModal} message={modalMessage} header={modalHeader} link={modalLink}/>
-            <Header>Kartera Farms</Header>
+            <Header>Kartera Farms<sup><HelpOutlineIcon fontSize="small" onClick={()=>showInfoBox()}/></sup></Header>
             <FarmCardContainer>
 
                 <FarmCard>
@@ -458,7 +471,7 @@ const Header = styled.div`
     font-weight: 700;
     color: white;
     text-transform: uppercase;
-    margin: 50px;
+    margin: 20px;
     @media (max-width: 770px){
         margin-top: 10px;
     }
