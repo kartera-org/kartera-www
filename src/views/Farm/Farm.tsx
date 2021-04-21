@@ -7,9 +7,7 @@ import Button from "components/SmallButton";
 import WalletButton from "components/WalletButton";
 import styled from "styled-components";
 import MessageModal from "components/MessageModal";
-import ConstituentsModal from "components/ConstituentsModal";
 import copy from 'assets/copy.png';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 
 import useKartera from "hooks/useKartera";
@@ -21,6 +19,7 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 
 import getIcon from "components/Icons";
 import { numberWithCommas, formatDollar, displayAddress } from "utils/formatting";
+
 
 const Farm: React.FC = () => {
 
@@ -91,7 +90,6 @@ const Farm: React.FC = () => {
         let basketaddr = '';
         let tokenaddr = '';
         let amount = '';
-        setModalLink("");
         if(!baskets){
             setModalHeader("Error");
             setModalMessage("Unable to withdraw tokens, error retreiving baskets.");
@@ -312,7 +310,7 @@ const Farm: React.FC = () => {
     const showInfoBox = () => {
         setMessageModalState(true);
         setModalHeader("Kartera Farms");
-        setModalMessage("Lock your basket tokens in BasketFarm to receive KART token rewards. KART tokens gives its holders a claim on swap fees and voting rights on governance proposals. Swap fees are collected by KART token holders what lock their tokens in Kartera Token Farm.")
+        setModalMessage("KART can be earned by locking basket tokens in the Basket Farm. Anyone holding KART tokens has a claim on swap fees and voting rights on governance proposals. Swap fees are collected by KART holders who have locked their tokens in the Kartera Farm.")
     }
 
     useEffect(()=>{
@@ -331,7 +329,7 @@ const Farm: React.FC = () => {
         <MessageModal state={messageModalState} handleClose={closeMessageModal} message={modalMessage} header={modalHeader} link={modalLink}/>
         { !active?
             <>
-            <Header>Connect your wallet <sup><HelpOutlineIcon fontSize="small" onClick={()=>showInfoBox()}/></sup></Header>
+            <Header>Connect wallet to lock tokens <sup><HelpOutlineIcon fontSize="small" onClick={()=>showInfoBox()}/></sup></Header>
             <br />
             
             <WalletButton large={true}/>
@@ -367,18 +365,18 @@ const Farm: React.FC = () => {
                     </TokenInfoContainer>
 
                     <ButtonGroup>
-                        <Button text={"Deposit"} backgroundColor={"#EE4400"} onClick={()=>{handleBasketDeposit()}}/>
-                        <Button text={"Withdraw"} backgroundColor={"#EE4400"} onClick={()=>{handleBasketWithdraw()}}/>
+                        <Button text={"Deposit"} backgroundColor={"#2e6ad1"} onClick={()=>{handleBasketDeposit()}}/>
+                        <Button text={"Withdraw"} backgroundColor={"#2e6ad1"} onClick={()=>{handleBasketWithdraw()}}/>
                     </ButtonGroup>
 
                     <ButtonGroup>
-                        <Button text={"Collect"} backgroundColor={"#EE4400"} onClick={()=>{handleCollectRewards()}}/>
-                        <Button text={"Withdraw All"} backgroundColor={"#EE4400"} onClick={()=>{handleBasketWithdrawAll()}}/>
+                        <Button text={"Collect"} backgroundColor={"#2e6ad1"} onClick={()=>{handleCollectRewards()}}/>
+                        <Button text={"Withdraw All"} backgroundColor={"#2e6ad1"} onClick={()=>{handleBasketWithdrawAll()}}/>
                     </ButtonGroup>
 
                 </FarmCard>
                 <FarmCard>
-                    <BlackText>Kartera Tokens Farm</BlackText>
+                    <BlackText>Kartera Farm</BlackText>
                     <BlackCaptionText>Lock KART tokens in farm to earn 0.05% fom swap fees </BlackCaptionText>
 
                     <InputDiv>
@@ -414,8 +412,8 @@ const Farm: React.FC = () => {
                     </TokenInfoContainer>
 
                     <ButtonGroup>
-                        <Button text={"Deposit"} backgroundColor={"#EE4400"} onClick={()=>{handleKartDeposit()}}/>
-                        <Button text={"Withdraw"} backgroundColor={"#EE4400"} onClick={()=>{handleKartWithdraw()}}/>
+                        <Button text={"Deposit"} backgroundColor={"#2e6ad1"} onClick={()=>{handleKartDeposit()}}/>
+                        <Button text={"Withdraw"} backgroundColor={"#2e6ad1"} onClick={()=>{handleKartWithdraw()}}/>
                     </ButtonGroup>
 
                 </FarmCard>
@@ -447,7 +445,6 @@ const FarmContainer = styled.div`
     align-items: center;
     justify-content: center;
     min-height: 81vh;
-    background-image: linear-gradient(to bottom right, #150734, #28559A);
     color: white;
     @media (max-width: 770px){
         justify-content: center;

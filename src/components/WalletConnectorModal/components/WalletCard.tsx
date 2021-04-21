@@ -12,7 +12,7 @@ interface WalletCardI {
 const WalletCard: React.FC<WalletCardI> = ({icon, name, onClick}) => (
     <WalletProviderContainer>
         <WalletProviderImage>
-            <img src={icon} width="35px" alt={name} />
+            <img src={icon} height="35px" alt={name} />
         </WalletProviderImage>
         <WalletProviderTitle>{name}</WalletProviderTitle>
         <SmallButton text={"Select"} onClick={onClick} backgroundColor={"#00ce00"} ></SmallButton>
@@ -21,27 +21,35 @@ const WalletCard: React.FC<WalletCardI> = ({icon, name, onClick}) => (
 
 const WalletProviderContainer = styled.div`
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    width: 100%;
+    width: 150px;
+    min-height: 175px;
     padding: 5px;
+    box-shadow: inset 0 3px 8px #000;
+    margin: 10px;
+    padding: 25px;
+    border-radius: 25px;
     &:hover{
         background-color: #eee;
     }
 `;
 
 const WalletProviderTitle = styled.div`
-    display: flex;
     flex: 1;
-    font-size: 18px;
+    font-size: 24px;
     font-weight: 700;
-    margin: 1% 5%;
+    margin: 20px;;
 `;
 
-const WalletProviderImage = styled.div``;
+const WalletProviderImage = styled.div`
+    flex: 1;
+    margin: 10px;
+`;
 
-const SelectButton = styled.div`
-
+const ButtonContainer = styled.div`
+    flex: 1;
+    margin: 10px;
 `;
 
 export default WalletCard;

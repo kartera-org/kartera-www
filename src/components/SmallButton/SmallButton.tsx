@@ -29,6 +29,7 @@ const StyledButton = styled.div`
     border-radius: 5px;
     padding: 5px 10px;
     cursor: pointer;
+    box-shadow: 0 3px 8px #000;
     @media (max-width: 770px){
     }
 `;

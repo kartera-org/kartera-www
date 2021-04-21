@@ -2,6 +2,7 @@ import React, { useState, useCallback } from "react";
 import styled, { keyframes } from "styled-components";
 import MenuButton from "./MenuButton"
 import MenuItems from "./MenuItems"
+import KartIcon from "assets/images/kartLogo1.png";
 
 interface MenuI {
     onDismiss: () => void;
@@ -15,6 +16,9 @@ const Menu: React.FC<MenuI> = ({ onDismiss, mobileMenu }) => {
           <StyledBackdrop onClick={onDismiss} />
         )}
         <StyledNav>
+            <LogoImgContainer>
+              <img src={KartIcon} alt="kartera" width="50px"/>
+            </LogoImgContainer>
             <MobileTitle>KARTERA</MobileTitle>
             {MenuItems.map((item, index) => {
                 return (
@@ -71,7 +75,14 @@ const Menu: React.FC<MenuI> = ({ onDismiss, mobileMenu }) => {
     @media (max-width: 770px){
         display: block;
     }
-  `;  
+  `;
+
+  const LogoImgContainer = styled.div`
+    display: none;
+    @media (max-width: 770px){
+        display: block;
+    }
+`;
   
   export default Menu;
   

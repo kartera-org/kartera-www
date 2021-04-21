@@ -1,6 +1,6 @@
 import React, { useCallback, useState, useEffect } from "react";
 import styled from "styled-components";
-// import { useWallet } from "use-wallet";
+import * as utils from "utils/index";
 import { useWeb3React } from "@web3-react/core";
 
 import metamaskLogo from "assets/metamask-fox.svg";
@@ -20,25 +20,28 @@ const WalletConnectorModal: React.FC<WCModalI> = ({state, onClose}) => {
     const { account, activate, active } = web3context;
     const [connector, setConnector] = useState<string>("");
 
-    const handleConnectMetamask = useCallback(() => {
+    const handleConnectMetamask = () => {
         setConnector("metamask")
         activate(injected);
-      }, [activate]);
-    
-      const handleConnectWalletConnect = useCallback(() => {
+      }
+      const handleConnectWalletConnect = () => {
         setConnector("walletconnect")
         activate(walletconnect);
-      }, [activate]);
+      }
 
       useEffect(() => {
         if (account) {
             onClose && onClose();
         }
-        if (active && connector)
+        utils.sleep(200);
+        console.log('connector: ', connector );
+        console.log('account: ', account );
+        if (account && connector)
         {
+            console.log('saving provider : ', connector );
             localStorage.setItem("walletProvider", connector);
         }
-      }, [account]);
+      }, [account, connector]);
 
       useEffect(() =>{
         const walletProvider = localStorage.getItem("walletProvider");
@@ -99,6 +102,7 @@ const WalletProvidersContainer = styled.div`
 
 const HeaderContainer = styled.div`
     display: flex;
+    justify-content: center;
     background: "#eee";
 `;
 
@@ -111,13 +115,17 @@ const Header = styled.div`
 
 const Body = styled.div`
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     justify-content: center;
     align-items: center;
     font-size: 18px;
     font-weight: 300;
     color: black;
     margin: 5% 0;
+    @media (max-width: 770px){
+        flex-direction: column;
+        align-items: center;
+    }
 `;
 
 export default WalletConnectorModal;

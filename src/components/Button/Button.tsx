@@ -27,10 +27,11 @@ const StyledButton = styled.div`
     min-height: 35px;
     font-size: max(min(18px, 4.5vw), 12px);
     font-weight:500;
-    border-radius: 5px;
+    border-radius: 15px;
     padding: 10px 20px;
     border: 2px solid transparent;
     cursor: pointer;
+    box-shadow: 0 3px 8px #000;
     @media (max-width: 770px){
         width: 35%;
     }

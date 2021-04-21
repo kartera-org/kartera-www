@@ -14,7 +14,8 @@ const Banner: React.FC = () => {
               <StyledText1>Swap</StyledText1>
               <StyledText1>Protocol</StyledText1>
               <StyledText2> Kartera is the ultimate diversification protocol. Exposure to the basket allows anyone to diversify risk and earn return from swap trades done with the basket. </StyledText2>
-
+              <StyledText2 style={{fontWeight:700}}>- <a href="/diversify" style={{color:'white', textDecoration:'underline'}}>Exchange your tokens for Diversified Tokens</a></StyledText2>
+              <StyledText2 style={{fontWeight:700}}>- <a href="/swap" style={{color:'white', textDecoration:'underline'}}> Swap Tokens at mid market price</a></StyledText2>
               <KarteraTokenContainer>
 
                 <KarteraTitle>KarteraToken (KART)</KarteraTitle>

@@ -257,7 +257,7 @@ const Swap: React.FC = () => {
     const showInfoBox = () => {
         setMessageModalState(true);
         setModalHeader("Swaps");
-        setModalMessage("You may swap between any two basket tokens. All swap traded happen at mid market price from uniswap feed. 0.3% fees is applied to all trades draining upto 1% of tokens in the basket. Fees go up linearly with every percent increase in trade size. Max trade size is capped at 10%. For more details on swap transaction fees please refer to contracts and documents.")
+        setModalMessage("You may swap your tokens for any of the basket constituents. All swap trades happen at mid market price from uniswap feed. A fee of 0.3% is applied to all trades that draining upto 1% of tokens from the basket. Fees go up linearly with every percent increase in trade size. Max trade size is capped at 10%. For more details on swap transaction fees please refer to contracts and documents.")
     }
 
     useEffect(()=>{
@@ -411,6 +411,7 @@ const Swap: React.FC = () => {
         </SwapContainer>
       );
     };
+    // background-image: linear-gradient(to bottom right, #150734, #28559A);
 
 const SwapContainer = styled.div`
     display: flex;
@@ -418,7 +419,6 @@ const SwapContainer = styled.div`
     align-items: center;
     justify-content: center;
     min-height: 81vh;
-    background-image: linear-gradient(to bottom right, #150734, #28559A);
     color: white;
     padding: 20px;
 `;
@@ -568,13 +568,14 @@ const SwapButton = styled.div`
     font-size: 25px;
     font-weight: 500;
     color: #FFFFFF;
-    background-color: #EE4400;
+    background-color: #2e6ad1;
     border-radius: 15px;
     text-align: center;
     border-radius: 10px;
     padding: 15px;
     margin: 20px 20px 0px 20px;
     cursor: pointer;
+    box-shadow: 0 3px 8px #000;
 `;
 
 const Footnote = styled.div`

@@ -4,7 +4,7 @@ import { Grid } from "@material-ui/core";
 import { keyframes } from 'styled-components';
 import CirImage from "assets/images/icons_circle3.png";
 import WhiteBgImage from "assets/images/white_bg1.png";
-import KartImage from "assets/images/kart.png";
+import KartImage from "assets/images/kart_icon5.svg";
 
 const AnimateImage: React.FC = () => {
 
@@ -13,15 +13,12 @@ const AnimateImage: React.FC = () => {
             <Grid container >
                 <Grid item>
                     <ImageContainer>
-                        <BGImageDiv>
-                            <img src={WhiteBgImage} alt={""} />
-                        </BGImageDiv>
-                        <KartImageDiv>
-                            <img src={KartImage} alt={""} />
-                        </KartImageDiv>
                         <CircularImageDiv>
                             <img src={CirImage} alt={""} />
                         </CircularImageDiv>
+                        <KartImageDiv>
+                            <img src={KartImage} alt={""} />
+                        </KartImageDiv>
                     </ImageContainer>
                 </Grid>
             </Grid>

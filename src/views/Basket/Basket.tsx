@@ -33,6 +33,7 @@ const Basket: React.FC = () => {
 
     const [modalMessage, setModalMessage] = useState('');
     const [modalHeader, setModalHeader] = useState('');
+    const [modalLink, setModalLink] = useState('');
 
     const [selectedTokenIndx, setSelectedTokenIndx] = useState<number>(-1);
     const [numberOfTokens, setNumberOfTokens] = useState<string>('');
@@ -81,6 +82,7 @@ const Basket: React.FC = () => {
     }
 
     function handleDeposit() {
+        setModalLink("");
         let basketaddr = '';
         let tokenaddr = '';
         let amount = '';
@@ -128,6 +130,7 @@ const Basket: React.FC = () => {
     }
 
     function handleWithdraw() {
+        setModalLink("");
         let basketaddr = '';
         let tokenaddr = '';
         let amount = '';
@@ -185,7 +188,7 @@ const Basket: React.FC = () => {
     const showInfoBox = () => {
         setMessageModalState(true);
         setModalHeader("Kartera Baskets");
-        setModalMessage("You may deposit your tokens in a Kartera Baket and receive equivalent number of basket tokens. Kartera basket tokens offer diversification by tracking  aggregate value of all deposited tokens. Liquidity in the baskets allow users to swap between different tokens for a small fee between. This fee is deposited in the basket generating returns in excess of just the perfomance of the deposited tokens. To withdraw tokens from the basket enter the number of tokens you wish to return. You may request any tokens to be exchanged for your basket tokens. ")
+        setModalMessage("You may deposit your tokens in a Kartera Basket and receive equivalent number of basket tokens. The value of the basket represents the combined value of all tokens deposited. The token liquidity in the basket is used to offer swaps between different tokens for a small fee which is added to the basket. This increases value of the basket and offers higher returns to the token holders. Users can withdraw liquidity by returning basket tokens. Withdrawal can be made in any available tokens.")
     }
 
     useEffect(()=>{
@@ -315,7 +318,6 @@ const BasketContainer = styled.div`
     align-items: center;
     justify-content: center;
     min-height: 81vh;
-    background-image: linear-gradient(to bottom right, #150734, #28559A);
     color: white;
 `;
 

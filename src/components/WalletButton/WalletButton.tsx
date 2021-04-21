@@ -83,11 +83,11 @@ const WalletButton: React.FC<WalletBtnI> = ({large}) => {
               location.pathname == '/'?
                 <SmallButton backgroundColor={"#2e6ad1"} link={"/diversify"} text="Use App" />
               :
-              !userAccount ? (
+              !account ? (
                 large?
                 <LargeWalletButton onClick={handleWalletConnectorClick} text="Connect" />
                 :
-                <SmallButton onClick={handleWalletConnectorClick} text="Connect" backgroundColor={"#2e6ad1"} />
+                <SmallButton onClick={handleWalletConnectorClick} text="&nbsp;Connect&nbsp;" backgroundColor={"#2e6ad1"} />
               ) : (
                 <SmallButton onClick={handleDisconnectWallet} text="Disconnect" backgroundColor={"#ff0000"}/>
                 )

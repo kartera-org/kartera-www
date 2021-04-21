@@ -6,7 +6,6 @@ import MessageModal from "components/MessageModal";
 import { displayAddress } from "utils/formatting"
 import CircularProgress from '@material-ui/core/CircularProgress';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
-
 import useGovernance from "hooks/useGovernance";
 import { useWeb3React } from '@web3-react/core';
 
@@ -26,24 +25,24 @@ const Governance: React.FC = () => {
     const showInfoBox = () => {
         setMessageModalState(true);
         setModalHeader("Governance");
-        setModalMessage("Kartera protocol is governed by KART tokens. Holders of KART tokens have rights to make proposals and vote on proposals. KART tokens can be received by locking Kartera Basket Tokens in a Basket Farm.")
+        setModalMessage("Kartera protocol is governed by KART tokens. Holders of KART tokens have a right to make proposals and vote on proposals. KART tokens can be received by locking Basket Tokens in a Farm.")
     }
 
 
     return(
-        <GovernanceContainer>
-            <MessageModal state={messageModalState} handleClose={closeMessageModal} message={modalMessage} header={modalHeader} />
-
-            {
+       <>
+            {     
             !active?
-            <>
-            <Header>Connect your wallet <sup><HelpOutlineIcon fontSize="small" onClick={()=>showInfoBox()}/></sup></Header>
+            <GovernanceContainer style={{alignItems:'center', justifyContent:'center'}}>
+            <MessageModal state={messageModalState} handleClose={closeMessageModal} message={modalMessage} header={modalHeader} />
+            <Header>Connect wallet to view proposals <sup><HelpOutlineIcon fontSize="small" onClick={()=>showInfoBox()}/></sup></Header>
             <br />
             
             <WalletButton large={true}/>
-            </>
+            </GovernanceContainer>
             :
-            <>
+            <GovernanceContainer>
+            <MessageModal state={messageModalState} handleClose={closeMessageModal} message={modalMessage} header={modalHeader} />
             <HeaderContainer>
                 <Header>Governance<sup><HelpOutlineIcon fontSize="small" onClick={()=>showInfoBox()}/></sup></Header>
                 {/* <CaptionText>Kartera tokens represent voting rights in Kartera Governance. You may vote on proposals or delegate your vote to a third party.</CaptionText> */}
@@ -67,7 +66,7 @@ const Governance: React.FC = () => {
                         <ProposalItem>{`Against Votes ${item?.againstVotes.toString()}`}</ProposalItem >
                         {
                         item.stateName=="Active"?
-                            <ProposalItem><Button text={"Vote"} backgroundColor={"#EE4400"}/></ProposalItem>
+                            <ProposalItem><Button text={"Vote"} backgroundColor={"#2e6ad1"}/></ProposalItem>
                         :
                             <></>
                         }
@@ -78,11 +77,12 @@ const Governance: React.FC = () => {
                 :
                 <CircularProgress />
                 }
-                </>
+                </GovernanceContainer>
+
                 
             }
             
-        </GovernanceContainer>
+        </>
     )
 
 
@@ -93,7 +93,7 @@ const GovernanceContainer = styled.div`
     flex-direction: column;
     align-items: center;
     min-height: 81vh;
-    background-image: linear-gradient(to bottom right, #150734, #28559A);
+    background-size: cover;
     color: white;
     padding:20px;
 `;
@@ -131,6 +131,7 @@ const ProposalCard = styled.div`
     margin: 10px 50px;
     min-width: 75%;
     padding: 20px;
+    box-shadow: 0 3px 8px #000;
 `;
 
 const ProposalRow = styled.div`

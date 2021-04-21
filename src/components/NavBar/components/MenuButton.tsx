@@ -22,8 +22,8 @@ const StyledButton = styled.div`
     justify-content: center;
     align-items: center;
     min-height: 35px;
-    fontSize: 18px;
-    fontWeight:700;
+    font-size: 16px;
+    font-weight:700;
     opacity: 0.75;
     border: 2px solid transparent;
     &:hover{

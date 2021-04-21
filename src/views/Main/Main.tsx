@@ -9,7 +9,7 @@ import AnimateImage2 from "components/AnimatedImage2";
 const Main: React.FC = () => {
 
     return (
-      <Container>
+      <Container >
         <InnerContainer>
           <Banner />
           <AnimateImage2 />
@@ -27,7 +27,6 @@ const Main: React.FC = () => {
 
     const Container = styled.div`
         min-height: 81vh;
-        background-image: linear-gradient(to bottom right, #150734, #28559A);
     `;
     
     const InnerContainer = styled.div`

@@ -4,6 +4,7 @@ import styled, { keyframes } from "styled-components";
 import MenuIcon from '@material-ui/icons/Menu';
 import Menu from "./components/Menu";
 import WalletButton from "components/WalletButton";
+import KartIcon from "assets/images/kart_icon.png";
 
 const Navbar : React.FC = (props)=> {
 
@@ -27,7 +28,11 @@ const Navbar : React.FC = (props)=> {
                   <MenuIcon />
                 </IconButton>
               </IconDiv>
-            <LogoText>KARTERA</LogoText>
+              <LogoImgContainer>
+                <img src={KartIcon} alt="kartera" width="50px"/>
+              <LogoText>KARTERA</LogoText>
+              </LogoImgContainer>
+
           </Logo>
           
           {mobileMenu?
@@ -67,7 +72,6 @@ const MenuContainer = styled.div`
 `;
 
 const StyledNavBar = styled.div`
-  background-image: linear-gradient(to bottom right, #150734, #28559A);
   color: white;
   height:auto;
   align-items: center;
@@ -85,7 +89,10 @@ const StyledNavBarInner = styled.div`
 const LogoText = styled.div`
   font-size: 30px;
   font-weight: 900;
-  marginLeft: 25px;
+  margin-left: 10px;
+  @media (max-width: 860px) {
+    margin-left: 5px;
+  }
 `;
 
 const Logo = styled.div`
@@ -108,6 +115,13 @@ const IconDiv = styled.div`
   @media (max-width: 770px) {
     display: block;
   }
+`;
+
+const LogoImgContainer = styled.div`
+  display: flex;
+  align-items: center;
+  @media (max-width: 770px) {
+}
 `;
 
 export default Navbar;
