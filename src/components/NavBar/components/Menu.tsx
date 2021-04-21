@@ -2,7 +2,7 @@ import React, { useState, useCallback } from "react";
 import styled, { keyframes } from "styled-components";
 import MenuButton from "./MenuButton"
 import MenuItems from "./MenuItems"
-import KartIcon from "assets/images/kartLogo1.png";
+import KartIcon from "assets/images/kart_icon.png";
 
 interface MenuI {
     onDismiss: () => void;

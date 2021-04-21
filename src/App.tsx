@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import { Web3ReactProvider } from '@web3-react/core';
-import WalletConnector from "components/WalletConnector";
 import getLibrary from "utils/getLibrary";
 
 import NavBar from "components/NavBar";

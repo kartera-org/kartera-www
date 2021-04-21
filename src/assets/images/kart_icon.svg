@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg viewBox="61.945 -6.176 550.208 556.84" width="500px" height="500px" xmlns="http://www.w3.org/2000/svg" xmlns:bx="https://boxy-svg.com">
+  <defs>
+    <linearGradient gradientUnits="userSpaceOnUse" x1="179.02" y1="89.761" x2="179.02" y2="389.761" id="gradient-0" gradientTransform="matrix(0.295035, 0.955486, -0.910694, 0.281203, 415.531473, 8.111894)">
+      <stop offset="0" style="stop-color: rgb(55, 120, 194);"/>
+      <stop offset="0.407" style="stop-color: rgb(40, 85, 154);"/>
+      <stop offset="0.776" style="stop-color: rgb(15, 37, 87);"/>
+      <stop offset="1" style="stop-color: rgb(21, 7, 52);"/>
+    </linearGradient>
+    <linearGradient gradientUnits="userSpaceOnUse" x1="284.65" y1="222.727" x2="284.65" y2="230.295" id="gradient-1" gradientTransform="matrix(6.907375, 0.000008, -0.20201, 7.607682, -1593.854662, -1505.820731)">
+      <stop offset="0" style="stop-color: rgba(255, 255, 255, 1)"/>
+      <stop offset="1" style="stop-color: rgba(204, 204, 204, 1)"/>
+    </linearGradient>
+    <linearGradient gradientUnits="userSpaceOnUse" x1="288.622" y1="233.921" x2="288.622" y2="246.508" id="gradient-2" gradientTransform="matrix(7.13983, -0.000004, 0.197989, 6.941474, -1755.328631, -1365.222837)">
+      <stop offset="0" style="stop-color: rgba(255, 255, 255, 1)"/>
+      <stop offset="1" style="stop-color: rgba(204, 204, 204, 1)"/>
+    </linearGradient>
+  </defs>
+  <path style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0); stroke-width: 5px;" d="M 529.102 280.835" bx:origin="0 0"/>
+  <path style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0); stroke-width: 5px;" d="M 542.748 430.56" bx:origin="0 0"/>
+  <path style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0); stroke-width: 5px;" d="M 527.284 310.782" bx:origin="0 0"/>
+  <path style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0); stroke-width: 5px;" d="M 554.568 438.981" bx:origin="0 0"/>
+  <circle style="fill: url(#gradient-0); stroke-width: 7.30083px;" cx="437.267" cy="359.885" r="232.628" transform="matrix(1.111328, 0, 0, 1.143499, -148.42421, -142.126511)" bx:origin="1.363807 1.006793"/>
+  <path style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0);" d="M 130.842 189.327"/>
+  <rect x="229.745" y="390.463" width="0.537" height="0.549" style="fill: rgb(216, 216, 216);"/>
+  <polygon style="stroke: rgb(255, 255, 255); fill: url(#gradient-1);" points="188.746 188.734 150.286 245.528 500.959 244.807 437.383 187.952" transform="matrix(0.818627, -0.574326, 0.574326, 0.818627, -65.420182, 226.324274)"/>
+  <polygon style="stroke: rgb(255, 255, 255); fill: url(#gradient-2);" points="200.354 324.44 211.003 258.373 505.827 288.201 447.594 345.747" transform="matrix(0.699391, 0.714739, -0.714739, 0.699391, 322.036164, -161.565683)"/>
+</svg>
