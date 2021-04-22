@@ -33,15 +33,11 @@ const WalletConnectorModal: React.FC<WCModalI> = ({state, onClose}) => {
         if (account) {
             onClose && onClose();
         }
-        utils.sleep(200);
-        console.log('connector: ', connector );
-        console.log('account: ', account );
-        if (account && connector)
+        if (connector)
         {
-            console.log('saving provider : ', connector );
             localStorage.setItem("walletProvider", connector);
         }
-      }, [account, connector]);
+      }, [connector, account]);
 
       useEffect(() =>{
         const walletProvider = localStorage.getItem("walletProvider");

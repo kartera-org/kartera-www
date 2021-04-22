@@ -1,5 +1,6 @@
 export interface ContextValues {
     txMessage: string;
+    txAddress: string;
     processingTx: boolean;
     unsetTxMessage: ()=>void;
     baskets?: BasketI[];
@@ -7,6 +8,7 @@ export interface ContextValues {
     withdraw?: (basketAddress:string, tokenAddress:string, amount:string) => void;
     swap?: (basketAddress:string, tokenAddressFrom:string, tokenAddressTo:string, amount:string) => void;
     swapRate?: (basketAddress:string, tokenAddressFrom:string, tokenAddressTo:string) => Promise<string>;
+    tradingAllowed?: (basketAddress:string) => Promise<boolean>;
 }
 
 export interface BasketI {
@@ -20,6 +22,7 @@ export interface BasketI {
     constituents: ConstituentI[];
     userBalance: string;
     totalSupply: string;
+    withdrawCost:string;
 };
 
 export interface ConstituentI {

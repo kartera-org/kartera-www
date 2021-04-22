@@ -190,17 +190,10 @@ const Farm: React.FC = () => {
         let basketaddr = '';
         let tokenaddr = '';
         let amount = '';
-        setModalLink("");
-        if(!baskets){
-            setModalHeader("Error");
-            setModalMessage("Unable to deposit tokens, error retreiving baskets.");
-            setMessageModalState(true);
-            return;
-        }
         
         if(!depositKartTokens){
             setModalHeader("Error");
-            setModalMessage("Unable to withdraw tokens.");
+            setModalMessage("Unable to deposit tokens.");
             setMessageModalState(true);
             return;
         }
@@ -217,7 +210,7 @@ const Farm: React.FC = () => {
         setMessageModalState(true);
 
         try{
-            basketaddr = baskets[0].address;
+            console.log('here depositing kart!: ',  );
             amount = ethers.utils.parseEther(numberOfKarteraTokens).toString();
             depositKartTokens(amount);
         } catch (e) {
@@ -233,7 +226,6 @@ const Farm: React.FC = () => {
         let basketaddr = '';
         let tokenaddr = '';
         let amount = '';
-        setModalLink("");
         if(!baskets){
             setModalHeader("Error");
             setModalMessage("Unable to withdraw tokens, error retreiving baskets.");
@@ -310,7 +302,7 @@ const Farm: React.FC = () => {
     const showInfoBox = () => {
         setMessageModalState(true);
         setModalHeader("Kartera Farms");
-        setModalMessage("KART can be earned by locking basket tokens in the Basket Farm. Anyone holding KART tokens has a claim on swap fees and voting rights on governance proposals. Swap fees are collected by KART holders who have locked their tokens in the Kartera Farm.")
+        setModalMessage("KART can be earned by locking basket tokens in the Basket Farm. KART holders have voting rights on governance proposals and a claim on swap fees. To receive swap fees KART holders must lock their KART tokens in Kartera Farm.")
     }
 
     useEffect(()=>{
@@ -329,7 +321,7 @@ const Farm: React.FC = () => {
         <MessageModal state={messageModalState} handleClose={closeMessageModal} message={modalMessage} header={modalHeader} link={modalLink}/>
         { !active?
             <>
-            <Header>Connect wallet to lock tokens <sup><HelpOutlineIcon fontSize="small" onClick={()=>showInfoBox()}/></sup></Header>
+            <Header>Connect wallet to view farms <sup><HelpOutlineIcon fontSize="small" onClick={()=>showInfoBox()}/></sup></Header>
             <br />
             
             <WalletButton large={true}/>
@@ -356,7 +348,7 @@ const Farm: React.FC = () => {
 
                         <BlackItemText style={{fontWeight:500}}>Basket Farm </BlackItemText>
                         <TokenRow>
-                            <BlackItemText>{`Locked: ${bFarmUserDeposits} ${baskets?baskets[0].symbol:''}`}</BlackItemText> &nbsp;
+                            <BlackItemText>{`Locked: ${numberWithCommas(bFarmUserDeposits)} ${baskets?baskets[0].symbol:''}`}</BlackItemText> &nbsp;
                             <MaxButton onClick={()=>{withdrawAllB()}}>Max</MaxButton>
                         </TokenRow>
                         <TokenRow>
@@ -406,7 +398,7 @@ const Farm: React.FC = () => {
                         </TokenRow>
 
                         <TokenRow>
-                            <BlackItemText>{`Basket Earnings: ${numberWithCommas(kFarmBasketBalance)} kETH`}</BlackItemText> &nbsp;
+                            <BlackItemText>{`Collected Fees: ${numberWithCommas(kFarmBasketBalance)} kETH`}</BlackItemText> &nbsp;
                         </TokenRow>
 
                     </TokenInfoContainer>
@@ -482,7 +474,7 @@ const FarmCard = styled.div`
     min-height: 250px;
     padding: 20px;
     min-width:250px;
-    height: 425px;
+    min-height: 435px;
     margin: 1% 7%;
     @media (max-width: 770px){
         padding: 5%;

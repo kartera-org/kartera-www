@@ -1,17 +1,15 @@
-import KartFarm from "constants/abi/KarteraFarm.json";
+import KarteraFarm from "constants/abi/KarteraFarm.json";
 import { KartFarmAddress, KarteraTokenAddress } from "constants/tokenAddresses";
 import { ethers } from 'ethers';
-import * as utils from "utils/index";
 
 export const KarteraFarmContract = (provider:any)=> {
-    return new ethers.Contract(KartFarmAddress, KartFarm.abi, provider);
+    return new ethers.Contract(KartFarmAddress, KarteraFarm.abi, provider);
 }
 
 export const DepositKartInFarm = async (provider:any, numberOfTokens:string) => {
     const kartFarmContract = KarteraFarmContract(provider);
     let signer = await provider.getSigner(0);
     try{
-        const kartFarmContract = KarteraFarmContract(provider);
         let deposittx = await kartFarmContract.connect(signer).deposit(numberOfTokens);
         return deposittx['hash'];
     }catch(e){

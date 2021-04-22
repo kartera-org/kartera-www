@@ -7,6 +7,7 @@ import { injected, walletconnect, walletlink, ledger, trezor, frame, fortmatic, 
 import SmallButton from "components/SmallButton";
 import LargeWalletButton from "components/LargeWalletButton";
 import WalletConnectorModal from "components/WalletConnectorModal";
+import MessageModal from "components/MessageModal";
 import { useLocation } from "react-router-dom";
 
 interface WalletBtnI {
@@ -17,6 +18,13 @@ const WalletButton: React.FC<WalletBtnI> = ({large}) => {
     const [walletModalState, setWalletModalState] = useState(false);
     const [walletConnectorState, setWalletConnectorState] = useState(false);
     const [userAccount, setUserAccount] = useState<string | null>();
+    const [ modalState, setModalState] = useState(false);
+    const [ modalMessage, setModalMessage] = useState("");
+    const [ modalHeader, setModalHeader] = useState("Error");
+
+    const closeMessageModal =  ()=>{
+      setModalState(false);
+    }
 
     const web3context = useWeb3React();
     const { chainId, account, library, activate, active, deactivate, error } = web3context;
@@ -55,12 +63,18 @@ const WalletButton: React.FC<WalletBtnI> = ({large}) => {
       }, [deactivate]);
   
     useEffect(() => {
+      if(active && chainId!=process.env.REACT_APP_ETH_NETWORKID){
+        setModalHeader("Error");
+        setModalMessage(`Incorrect network detected. Please connect to ${process.env.REACT_APP_ETH_NETWORK} network`)
+        setModalState(true);
+        return;
+      }
       const localAccount: any = (account ? account.toString() : false) || localStorage.getItem("account");
       if (account) {
         localStorage.setItem("account", localAccount);
         setUserAccount(localAccount);
       }
-    }, [account, userAccount, handleDismissWalletModal]);
+    }, [active, chainId, account, userAccount, handleDismissWalletModal]);
   
     useEffect(() => {
       const localAccount = localStorage.getItem("account");
@@ -78,6 +92,7 @@ const WalletButton: React.FC<WalletBtnI> = ({large}) => {
   
     return (
         <>
+          <MessageModal state={modalState} handleClose={closeMessageModal} header={modalHeader} message={modalMessage}/>
             <StyledWalletButton>
               {
               location.pathname == '/'?

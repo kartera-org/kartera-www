@@ -25,19 +25,20 @@ const Swap: React.FC = () => {
     const web3context = useWeb3React();
     const { active } = web3context;
 
-    const { baskets, swap, swapRate, txMessage, processingTx, unsetTxMessage } = useBaskets();
+    const { baskets, swap, swapRate, tradingAllowed, txAddress, txMessage, processingTx, unsetTxMessage } = useBaskets();
     const { ethBalance, accAddress } = useKartera();
 
     const [ messageModalState, setMessageModalState] = useState(false);
     const [modalMessage, setModalMessage] = useState('');
     const [modalHeader, setModalHeader] = useState('');
+    const [modalLink, setModalLink] = useState('');
 
     const [ fromConstituentModalState, setFromConstituentModalState ] = useState(false);
     const [ toConstituentModalState, setToConstituentModalState ] = useState(false);
 
     const [selectedFromTokenIndx, setSelectedFromTokenIndx] = useState<number>(0);
     const [selectedToTokenIndx, setSelectedToTokenIndx] = useState<number>(-1);
-    const [numberOfTokens, setNumberOfTokens] = useState<number>(-1);
+    const [numberOfTokens, setNumberOfTokens] = useState<string>('');
 
     const [showSwapDetails, setShowSwapDetails] = useState(false);
 
@@ -127,8 +128,12 @@ const Swap: React.FC = () => {
 
     const ToIconImage = ()=>{
         if(selectedToTokenIndx>=0 && baskets){
-            const icon = getIcon(baskets[0].constituents[selectedToTokenIndx].symbol);
-            return icon;
+            try{
+                const icon = getIcon(baskets[0].constituents[selectedToTokenIndx].symbol);
+                return icon;
+            }catch(e){
+                return null;
+            }
         }else{
             return null;
         }
@@ -143,14 +148,7 @@ const Swap: React.FC = () => {
         setBalances(selectedToid, selectedFromid);
     }
 
-    // const updateSwapButtonAndMessage = (numOfTokens:number, fromInd:any, toInd:any)=> {
-    //     getSwapRate(fromInd, toInd);
-    //     triggerSwapInfo(numOfTokens, fromInd, toInd);
-    //     updateSwapMessage(fromInd, toInd);
-    // }
-
-    const updateSwapButtonAndMessage = async (numOfTokens:number, fromInd:any, toInd:any)=> {
-
+    const updateSwapButtonAndMessage = async (numOfTokens:string, fromInd:any, toInd:any)=> {
         let exrate:number = 0;
         if(baskets && swapRate && fromInd>=0 && toInd>=0){
             let rate = await swapRate(baskets[0].address, baskets[0].constituents[fromInd].address, baskets[0].constituents[toInd].address);
@@ -161,12 +159,24 @@ const Swap: React.FC = () => {
         } else {
             setExchangeRate('');
         }
-    
-        if(numOfTokens && numOfTokens>0){
+        let ntkns = parseFloat(numOfTokens);
+
+        if(fromInd<0 || toInd<0 || fromInd==toInd) {
+            setShowSwapButton(false);
+            setSwapMessage("Select Token");
+            return;
+        }
+        if(!ntkns || ntkns<=0) {
+            setShowSwapButton(false);
+            setSwapMessage("Enter Amount");
+            return;
+        }
+
+        if(ntkns && ntkns>0){
             if(fromInd>=0 && toInd>=0){
                 setShowSwapButton(true);
                 setShowSwapDetails(true);
-                let tokensReceived = exrate*numOfTokens;
+                let tokensReceived = exrate*ntkns;
                 setTokensReceived(tokensReceived);
             } else {
                 setShowSwapButton(false);
@@ -181,20 +191,11 @@ const Swap: React.FC = () => {
         if(processingTx){
             setShowSwapButton(true);
         }
-    
-        if(fromInd<0 || toInd<0) {
-            setSwapMessage("Select Token");
-            return;
-        }
-        if(numberOfTokens && numberOfTokens<=0) {
-            setSwapMessage("Enter Amount");
-            return;
-        }
     }
 
     const swapAllTokens = ()=> {
         if(baskets && selectedFromTokenIndx>=0){
-            let n:number = parseFloat(baskets[0].constituents[selectedFromTokenIndx].userBalance);
+            let n:string = baskets[0].constituents[selectedFromTokenIndx].userBalance;
             setNumberOfTokens(n);
             updateSwapButtonAndMessage(n, selectedFromTokenIndx, selectedToTokenIndx);
         }
@@ -205,10 +206,11 @@ const Swap: React.FC = () => {
         let fromtokenaddr = '';
         let totokenaddr = '';
         let amount = '';
-        
-        if(!swap){
+        setModalLink("");
+
+        if(!swap || !tradingAllowed){
             setModalHeader("Error");
-            setModalMessage("Unable to deposit tokens.");
+            setModalMessage("Unable to swap tokens.");
             setMessageModalState(true);
             return;
         }
@@ -218,13 +220,21 @@ const Swap: React.FC = () => {
             setMessageModalState(true);
             return;
         }
+        let swapAllowed = tradingAllowed(baskets[0].address);
+        if(!swapAllowed) {
+            setModalHeader("Error");
+            setModalMessage("Swap transactions are not allowed at this time. Please try again later.");
+            setMessageModalState(true);
+            return;
+        }
         if(selectedToTokenIndx<0){
             setModalHeader("Error");
             setModalMessage("Please select token.");
             setMessageModalState(true);
             return;
         }
-        if(numberOfTokens<=0 || numberOfTokens > parseFloat(baskets[0].constituents[selectedFromTokenIndx].userBalance)){
+        let ntkns = parseFloat(numberOfTokens);
+        if(ntkns<=0 || ntkns > parseFloat(baskets[0].constituents[selectedFromTokenIndx].userBalance)){
             setModalHeader("Error");
             setModalMessage("# of token to swap should be >0 and <= wallet balance");
             setMessageModalState(true);
@@ -233,7 +243,7 @@ const Swap: React.FC = () => {
         let x= tokensReceived * 100 / parseFloat(baskets[0].constituents[selectedToTokenIndx].basketBalance);
         if(x>10){
             setModalHeader("Error");
-            setModalMessage("Swap exceeds maximum allowed size of 10% of liquidity.");
+            setModalMessage("Swap exceeds maximum size allowed of 10% of token liquidity.");
             setMessageModalState(true);
             return;
         }
@@ -252,18 +262,20 @@ const Swap: React.FC = () => {
             setModalMessage("Something went wrong, transaction failed.");
             setMessageModalState(true);
         }
+        setNumberOfTokens('');
     }
 
     const showInfoBox = () => {
         setMessageModalState(true);
         setModalHeader("Swaps");
-        setModalMessage("You may swap your tokens for any of the basket constituents. All swap trades happen at mid market price from uniswap feed. A fee of 0.3% is applied to all trades that draining upto 1% of tokens from the basket. Fees go up linearly with every percent increase in trade size. Max trade size is capped at 10%. For more details on swap transaction fees please refer to contracts and documents.")
+        setModalMessage("You may swap your tokens for any of the basket constituents. All swap trades happen at mid-market price from uniswap feed. Swapping at mid-market price is estimated to have savings enough to compensate for any gas cost associated with the transaction. A fee of 0.3% is applied to all trades that drain upto 1% of tokens from the basket. Fees go up linearly with every percent increase in trade size. Max trade size is capped at 10%. For more details on swap transaction fees please refer to contracts and documents.")
     }
 
     useEffect(()=>{
         if(txMessage!==''){
             setModalHeader("Transaction Message");
             setModalMessage(txMessage);
+            setModalLink(txAddress);
             setMessageModalState(true);
             unsetTxMessage();
         }
@@ -275,7 +287,7 @@ const Swap: React.FC = () => {
             
             <>
             <CustomModal state ={cmState} message={cmMessage} header={cmHeader} handleClose={closeCMModal} />
-            <MessageModal state={messageModalState} handleClose={closeMessageModal} message={modalMessage} header={modalHeader} />
+            <MessageModal state={messageModalState} handleClose={closeMessageModal} message={modalMessage} header={modalHeader} link={modalLink} />
             {
             
             !active?
@@ -302,16 +314,14 @@ const Swap: React.FC = () => {
                 <BlackCaptionText>Swaps trade at Uniswap mid market price.</BlackCaptionText>
 
                 <InputDiv>
-                   <TextField variant='filled' label={`# Tokens`} onChange={handleFromTextField} autoComplete='off' value={numberOfTokens>-1?numberOfTokens:''}/>
+                   <TextField variant='filled' label={`# Tokens`} onChange={handleFromTextField} autoComplete='off' value={parseFloat(numberOfTokens)>-1?numberOfTokens:''}/>
                    <ChooseTokenContainer>
                        <BalanceLabel>{`Balance: ${fromBalance}`}</BalanceLabel>
                        <ChooseTokenRow>
                            <MaxButton onClick={()=>{swapAllTokens()}}>Max</MaxButton>
                             <ChooseToken onClick={ ()=>{ setFromConstituentModalState(true)} } > 
                                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                                    {selectedFromTokenIndx>=0?
-                                        <img src={`${FromIconImage()}`} alt="icon" width="25px" /> 
-                                    :<></>}&nbsp;
+                                    <img src={`${FromIconImage()}`} alt="icon" width="25px" /> &nbsp;
                                     {selectedFromTokenIndx>=0 && baskets[0].constituents? baskets[0].constituents[selectedFromTokenIndx].symbol?.toUpperCase() : "Select"}
                                 </div>
                                 <ExpandMoreIcon />

@@ -28,6 +28,7 @@ const Provider: React.FC = ({ children }) => {
 
     const fetchAllFarmInfo = useCallback(
       async (userAddress: string, provider: any) => {
+        try{
         let kFarmUserBalance = await utils.getBalance(provider, KartFarmAddress, userAddress, 18);
         let kFarmKartBalance = await utils.getBalance(provider, KarteraTokenAddress, KartFarmAddress, 18);
         let kFarmTotalSupply = await utils.TotalSupply(provider, KartFarmAddress);
@@ -43,18 +44,21 @@ const Provider: React.FC = ({ children }) => {
         setBFarmBasketBalance(bFarmBasketBalance);
         setBFarmUserRewards(bFarmUserRewards);
         setBFarmUserDeposits(bFarmUserDeposits);
+        }catch(e){
+          console.log('error: ', e.message );
+        }
 
       },[]
     )
 
     const handleDepositBasketTokens = useCallback( 
-        async (basketAddress:string, amount:string) => {
-            try{
-            setProcessingTx(true);
-            const contract = basketFarmFunc.BasketFarmContract(library);
-            console.log('account: ', account );
-            let allowance = await utils.getAllowance(SwapFarmAddress, basketAddress, library, account);
-            console.log('allowance: ', allowance.toString() );
+      async (basketAddress:string, amount:string) => {
+        try{
+        setProcessingTx(true);
+        const contract = utils.getERC20Contract(library, BasketAddresses[0]);
+        console.log('account: ', account );
+        let allowance = await utils.getAllowance(SwapFarmAddress, basketAddress, library, account);
+        // console.log('allowance: ', allowance.toString() );
       
           if(new BigNumber(allowance.toString()).gte(new BigNumber(amount))){
             try{
@@ -65,37 +69,36 @@ const Provider: React.FC = ({ children }) => {
               let msg = 'Deposit transaction complete. TXID: ' + tx;
               setTxMessage(msg);
               setProcessingTx(false);
-              return;
             }catch( e ) {
+              console.log('e.message: ', e );
               setTxMessage(`Deposit Transaction failed: ${e.message}`);
               setProcessingTx(false);
-              return;
             }
-          }
-
-          let tx = await utils.ApproveTransfer(library, basketAddress, SwapFarmAddress);
-          setTxAddress(tx);
-          console.log('approval tx hash: ',  tx);
-          tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
-          let msg = 'Approval transaction ID: ' + tx;
-          setTxMessage(msg);
-          let done = false;
-          contract.on('Approval', async (owner, spender, value, evnt)=>{
-            if(!done){
-                done=true;
-                try{
-                    let tx = await basketFarmFunc.Deposit(library, basketAddress, amount);
-                    console.log('Deposit transaction tx hash: ',  tx);
-                    tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
-                    let msg = 'Deposit transaction complete. TXID: ' + tx;
-                    setTxMessage(msg);
+          }else{
+            let tx = await utils.ApproveTransfer(library, basketAddress, SwapFarmAddress);
+            setTxAddress(tx);
+            console.log('approval tx hash: ',  tx);
+            tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
+            let msg = 'Approval transaction ID: ' + tx;
+            setTxMessage(msg);
+            let done = false;
+            contract.on('Approval', async (owner, spender, value, evnt)=>{
+              if(!done){
+                  done=true;
+                  try{
+                      let tx = await basketFarmFunc.Deposit(library, basketAddress, amount);
+                      console.log('Deposit transaction tx hash: ',  tx);
+                      tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
+                      let msg = 'Deposit transaction complete. TXID: ' + tx;
+                      setTxMessage(msg);
+                      setProcessingTx(false);
+                  } catch (e) {
+                    setTxMessage(`Deposit Transaction failed: ${e.message}`);
                     setProcessingTx(false);
-                } catch (e) {
-                  setTxMessage(`Deposit Transaction failed: ${e.message}`);
-                  setProcessingTx(false);
+                  }
                 }
-              }
-          });
+            });
+          }
         }catch (e) {
             setTxMessage(`Transaction failed: ${e.message}`);
             setProcessingTx(false);
@@ -161,21 +164,58 @@ const Provider: React.FC = ({ children }) => {
       },[setTxMessage, setProcessingTx, library]);
 
     const handleDepositKartTokens = useCallback(
-      async (numberOfTokens:string) => {
+      async (amount:string) => {
         try{
           setProcessingTx(true);
-          let tx = await kartFarmFunc.DepositKartInFarm(library, numberOfTokens);
-          console.log('Deposit transaction tx hash: ',  tx);
-          tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
-          setTxAddress(tx);
-          let msg = 'Deposit transaction complete. TXID: ' + tx;
-          setTxMessage(msg);
-          setProcessingTx(false);
-          return;
-        }catch (e) {
-            setTxMessage(`Transaction failed: ${e.message}`);
-            setProcessingTx(false);
-        }
+          const contract = utils.getERC20Contract(library, KarteraTokenAddress);
+          console.log('account: ', account );
+          let allowance = await utils.getAllowance(KartFarmAddress, KarteraTokenAddress, library, account);
+          // console.log('allowance: ', allowance.toString() );
+        
+            if(new BigNumber(allowance.toString()).gte(new BigNumber(amount))){
+              try{
+                let tx = await kartFarmFunc.DepositKartInFarm(library, amount);
+                console.log('Deposit transaction tx hash: ',  tx);
+                setTxAddress(tx);
+                tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
+                let msg = 'Deposit transaction complete. TXID: ' + tx;
+                setTxMessage(msg);
+                setProcessingTx(false);
+                return;
+              }catch( e ) {
+                setTxMessage(`Deposit Transaction failed: ${e.message}`);
+                setProcessingTx(false);
+                return;
+              }
+            }
+  
+            let tx = await utils.ApproveTransfer(library, KarteraTokenAddress, KartFarmAddress);
+            setTxAddress(tx);
+            console.log('approval tx hash: ',  tx);
+            tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
+            let msg = 'Approval transaction ID: ' + tx;
+            setTxMessage(msg);
+            let done = false;
+            contract.on('Approval', async (owner, spender, value, evnt)=>{
+              if(!done){
+                  done=true;
+                  try{
+                      let tx = await kartFarmFunc.DepositKartInFarm(library, amount);
+                      console.log('Deposit transaction tx hash: ',  tx);
+                      tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
+                      let msg = 'Deposit transaction complete. TXID: ' + tx;
+                      setTxMessage(msg);
+                      setProcessingTx(false);
+                  } catch (e) {
+                    setTxMessage(`Deposit Transaction failed: ${e.message}`);
+                    setProcessingTx(false);
+                  }
+                }
+            });
+          }catch (e) {
+              setTxMessage(`Transaction failed: ${e.message}`);
+              setProcessingTx(false);
+          }
 
       },[setTxMessage, setProcessingTx, library]);
 

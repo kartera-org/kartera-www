@@ -3,9 +3,11 @@ import { Link } from "react-router-dom";
 import { BigNumber } from "bignumber.js";
 import { ethers } from "ethers";
 import { TextField } from '@material-ui/core';
+import SwapVerticalCircleIcon from '@material-ui/icons/SwapVerticalCircle';
 import Button from "components/Button";
 import styled from "styled-components";
 import MessageModal from "components/MessageModal";
+import ConfirmMessageModal from "components/ConfirmMessageModal";
 import ConstituentsModal from "components/ConstituentsModal";
 import copy from 'assets/copy.png';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
@@ -27,13 +29,17 @@ const Basket: React.FC = () => {
     const { active } = web3context;
 
     const {userBalance, ethBalance, accAddress} = useKartera();
-    const { baskets, deposit, withdraw, txMessage, processingTx, unsetTxMessage } = useBaskets();
+    const { baskets, deposit, withdraw, txAddress, txMessage, processingTx, unsetTxMessage } = useBaskets();
     const [ constituentModalState, setConstituentModalState ] = useState(false);
     const [ messageModalState, setMessageModalState] = useState(false);
 
     const [modalMessage, setModalMessage] = useState('');
     const [modalHeader, setModalHeader] = useState('');
     const [modalLink, setModalLink] = useState('');
+
+    const [confirmModalState, setConfirmModalState] = useState(false);
+    const [confirmModalHeader, setConfirmModalHeader] = useState("");
+    const [confirmModalMessage, setConfirmModalMessage] = useState("");
 
     const [selectedTokenIndx, setSelectedTokenIndx] = useState<number>(-1);
     const [numberOfTokens, setNumberOfTokens] = useState<string>('');
@@ -45,6 +51,9 @@ const Basket: React.FC = () => {
     }
     const closeMessageModal = ()=>{
         setMessageModalState(false);
+    }
+    const closeConfirmModal = () => {
+        setConfirmModalState(false);
     }
 
     const handleSelectToken = (indx:number)=>{
@@ -60,10 +69,26 @@ const Basket: React.FC = () => {
         setNumberOfTokens(onlyNums);
     }
 
+    const getTokenSymbol = () => {
+        try{
+            if(selectedTokenIndx>=0 && baskets){
+                return baskets[0].constituents[selectedTokenIndx].symbol.toUpperCase()
+            }else{
+                return "Choose Token";
+            }
+        }catch(e){
+            return "Choose Token";
+        }
+    }
+
     const IconImage = ()=>{
         if(selectedTokenIndx>=0 && baskets && baskets[0].constituents){
-            const icon = getIcon(baskets[0].constituents[selectedTokenIndx].symbol);
-            return icon;
+            try{
+                const icon = getIcon(baskets[0].constituents[selectedTokenIndx].symbol);
+                return icon;
+            }catch(e){
+                return null;
+            }
         }else{
             return null;
         }
@@ -119,7 +144,7 @@ const Basket: React.FC = () => {
         try{
             basketaddr = baskets[0].address;
             tokenaddr = baskets[0].constituents[selectedTokenIndx].address;
-            amount = ethers.utils.parseEther(numberOfTokens).toString();
+            amount = ethers.utils.parseUnits(numberOfTokens, baskets[0].constituents[selectedTokenIndx].decimals).toString();
             deposit(basketaddr, tokenaddr, amount);
         } catch (e) {
             setModalHeader("Message");
@@ -129,44 +154,69 @@ const Basket: React.FC = () => {
         setNumberOfTokens("");
     }
 
-    function handleWithdraw() {
+    function confirmWithdraw() {
+
         setModalLink("");
         let basketaddr = '';
         let tokenaddr = '';
         let amount = '';
         
-        if(!withdraw){
-            setModalHeader("Error");
-            setModalMessage("Unable to deposit tokens.");
-            setMessageModalState(true);
-            return;
-        }
         if(!baskets){
             setModalHeader("Error");
-            setModalMessage("Unable to deposit tokens, error retreiving baskets.");
+            setModalMessage("Unable to withdraw tokens, error retreiving baskets.");
             setMessageModalState(true);
             return;
         }
         if(selectedTokenIndx<0){
             setModalHeader("Error");
-            setModalMessage("Unable to deposit tokens, please select token.");
+            setModalMessage("Unable to withdraw tokens, please select token.");
             setMessageModalState(true);
             return;
         }
-        let isLessThanMax = new BigNumber(numberOfTokens).isLessThanOrEqualTo(baskets[0].userBalance)
+        let bgNtokens = new BigNumber(numberOfTokens);
+        let isLessThanMax = bgNtokens.isLessThanOrEqualTo(baskets[0].userBalance)
         if(parseFloat(numberOfTokens)<=0 || !isLessThanMax){
             setModalHeader("Error");
-            setModalMessage("Unable to deposit tokens, # of token should be >0 and <= wallet balance.");
+            setModalMessage("Unable to withdraw tokens, # of token should be >0 and <= wallet balance.");
+            setMessageModalState(true);
+            return;
+        }
+        let returnedTkns = bgNtokens.div(new BigNumber(baskets[0].constituents[selectedTokenIndx].exchangeRate));
+        let incentiveTokensReturned = bgNtokens.times(baskets[0].withdrawCost);
+
+        if(incentiveTokensReturned.isGreaterThan(userBalance)){
+            setModalHeader("Error");
+            setModalMessage("You do not have enough KART balance to pay withdrawal fees. To earn KART lock your kETH in basket farm.");
+            setMessageModalState(true);
+            return;
+        }
+        setConfirmModalHeader("Confirm Withdraw");
+        let msg = `Exchanging: ${numberOfTokens} kETH ${"\n\n"} Receiving: ${returnedTkns} ${baskets[0].constituents[selectedTokenIndx].symbol}.${"\n\n"} Withdraw Fee: ${incentiveTokensReturned} KART`;
+        setConfirmModalMessage(msg);
+        setConfirmModalState(true);
+    }
+
+    function handleWithdraw() {
+        setConfirmModalState(false);
+        if(!baskets){
+            setModalHeader("Error");
+            setModalMessage("Unable to withdraw tokens, error retreiving baskets.");
+            setMessageModalState(true);
+            return;
+        }
+        if(!withdraw){
+            setModalHeader("Error");
+            setModalMessage("Unable to withdraw tokens.");
             setMessageModalState(true);
             return;
         }
         setModalHeader("Message");
-        setModalMessage("Processing deposit, please wait");
+        setModalMessage("Processing withdrawal, please wait");
         setMessageModalState(true);
         try{
-            basketaddr = baskets[0].address;
-            tokenaddr = baskets[0].constituents[selectedTokenIndx].address;
-            amount = ethers.utils.parseUnits(numberOfTokens, 18).toString();
+            let basketaddr = baskets[0].address;
+            let tokenaddr = baskets[0].constituents[selectedTokenIndx].address;
+            let amount = ethers.utils.parseUnits(numberOfTokens, 18).toString();
             withdraw(basketaddr, tokenaddr, amount);
         } catch (e) {
             setModalHeader("Message");
@@ -187,13 +237,20 @@ const Basket: React.FC = () => {
 
     const showInfoBox = () => {
         setMessageModalState(true);
-        setModalHeader("Kartera Baskets");
-        setModalMessage("You may deposit your tokens in a Kartera Basket and receive equivalent number of basket tokens. The value of the basket represents the combined value of all tokens deposited. The token liquidity in the basket is used to offer swaps between different tokens for a small fee which is added to the basket. This increases value of the basket and offers higher returns to the token holders. Users can withdraw liquidity by returning basket tokens. Withdrawal can be made in any available tokens.")
+        setModalHeader("Diversification-Kartera Baskets");
+        setModalMessage(`When you deposit your tokens in a Kartera Basket you receive basket tokens equivalent to the deposited value. The basket is a diversified portfolio as its value is the combined value of all deposited tokens. ${"\n"}Kartera Basket also allows users to swap their tokens with any of its constituents for a small fee. This fee is added to the basket which increases the basket's value and therefore the value of the basket tokens associated with it. ${"\n"}You may withdraw tokens from the basket at anytime by returning your basket tokens. Withdrawal can be made in any available constituent tokens.`)
+    }
+
+    const showWithdrawCostInfo = () => {
+        setMessageModalState(true);
+        setModalHeader("Withdraw tokens from basket");
+        setModalMessage("To withdraw deposits from the basket enter the number of kETH you wish to liquidate. The fee to withdraw from basket is 1 KART per $100 of liquidity withdrawn. KART tokens can be earned by locking kETH tokens in basket farm.")
     }
 
     useEffect(()=>{
         if(txMessage!==''){
             setModalHeader("Transaction Message");
+            setModalLink(txAddress);
             setModalMessage(txMessage);
             setMessageModalState(true);
             unsetTxMessage();
@@ -202,13 +259,16 @@ const Basket: React.FC = () => {
 
     return (
         <BasketContainer>
-            <MessageModal state={messageModalState} handleClose={closeMessageModal} message={modalMessage} header={modalHeader} />
+            <MessageModal state={messageModalState} handleClose={closeMessageModal} message={modalMessage} header={modalHeader} link={modalLink} />
+
+            <ConfirmMessageModal state={confirmModalState} handleClose={closeConfirmModal} header={confirmModalHeader} message={confirmModalMessage} handleConfirm={handleWithdraw} />
+
             {
                 
             
             !active?
             <>
-                <Header>Connect wallet to view baskets<sup><HelpOutlineIcon fontSize="small" onClick={()=>showInfoBox()}/></sup></Header>
+                <Header>Connect wallet to diversify<sup><HelpOutlineIcon fontSize="small" onClick={()=>showInfoBox()}/></sup></Header>
                 <br />
                 
                 <WalletButton large={true}/>
@@ -227,13 +287,13 @@ const Basket: React.FC = () => {
                 <BlackText>Add Liquidity &amp; Receive kETH Tokens </BlackText>
                 <BlackCaptionText>kETH is a diversified tokens that earns commissions from swap trades</BlackCaptionText>
                 <InputDiv>
-                   <TextField variant='filled' label={`# tokens : 0.0`} onChange={handleTextField} autoComplete='off' value={parseFloat(numberOfTokens)>0?numberOfTokens:''}/>
+                   <TextField variant='filled' label={`# tokens : 0.0`} onChange={handleTextField} autoComplete='off' value={parseFloat(numberOfTokens)>=0?numberOfTokens:''}/>
                     <ChooseToken onClick={ ()=>{ setConstituentModalState(true)} } > 
                         <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                             {selectedTokenIndx>=0?
                                 <img src={`${IconImage()}`} alt="icon" width="25px" /> 
                             :<></>}&nbsp;
-                            {selectedTokenIndx>=0 ? baskets[0].constituents[selectedTokenIndx].symbol.toUpperCase() : "Choose Token"}
+                            {getTokenSymbol()}
                         </div>
                         <ExpandMoreIcon />
                     </ChooseToken>
@@ -244,7 +304,9 @@ const Basket: React.FC = () => {
                     <div style={{flex:2}}>
                     {selectedTokenIndx>=0 ?
                         <TokenInfoContainer>
+                            <TokenRow>
                             <BlackItemText>{`Exchange Rate:  ${parseFloat(baskets[0].constituents[selectedTokenIndx].exchangeRate).toFixed(4)} ${baskets[0].symbol}/${baskets[0].constituents[selectedTokenIndx].symbol.toUpperCase()}`}</BlackItemText>
+                            </TokenRow>
                             <BlackItemText style={{fontWeight:500}}>Wallet Balance </BlackItemText>
                             <TokenRow>
                                 <BlackItemText>{`${numberWithCommas(baskets[0].constituents[selectedTokenIndx].userBalance)} ${baskets[0].constituents[selectedTokenIndx].symbol.toUpperCase()}`}</BlackItemText> &nbsp;
@@ -255,10 +317,18 @@ const Basket: React.FC = () => {
                                 <MaxButton onClick={()=>{withdrawAll()}}>Max</MaxButton>
                             </TokenRow>
                             <BlackItemText>{`${numberWithCommas(userBalance)} KART`}</BlackItemText>
+                            {baskets[0].constituents[selectedTokenIndx].symbol.toUpperCase()!=="ETH"?
+                            <BlackItemText>{`${numberWithCommas(ethBalance)} Eth`}</BlackItemText>
+                            :<></>
+                            }
+                            <TokenRow>
+                                <BlackItemText><Link to={{pathname:`https://etherscan.io/address/${accAddress}`}} target="_blank" style={{textDecoration:'none'}}>{displayAddress(accAddress)}</Link></BlackItemText>
+                            </TokenRow>
                         </TokenInfoContainer>
                         :
                         <TokenInfoContainer>
                             <BlackItemText style={{fontWeight:500}}>Wallet Balance </BlackItemText>
+                            <BlackItemText>{`${numberWithCommas(baskets[0].userBalance)} kETH`}</BlackItemText>
                             <BlackItemText>{`${numberWithCommas(userBalance)} KART`}</BlackItemText>
                             <BlackItemText>{`${numberWithCommas(ethBalance)} Eth`}</BlackItemText>
                             <TokenRow>
@@ -281,7 +351,7 @@ const Basket: React.FC = () => {
 
                 <ButtonGroup>
                     <Button text={"Deposit"} onClick={()=>{handleDeposit()}}/>
-                    <Button text={"Withdraw"} onClick={()=>{handleWithdraw()}}/>
+                    <Button text={"Withdraw"} onClick={()=>{confirmWithdraw()}}/>
                 </ButtonGroup>
             </AddLiquidityCard>
             <BasketInfo>
@@ -292,6 +362,7 @@ const Basket: React.FC = () => {
                     <Text>{`Basket Balance: ${numberWithCommas(baskets[0].constituents[selectedTokenIndx].basketBalance)} ${baskets[0].constituents[selectedTokenIndx].symbol.toUpperCase()}`}</Text>
                     :<></>
                 }
+                <Text>{`Withdraw Cost: ${numberWithCommas(baskets[0].withdrawCost)} KART/kETH`}<sup><HelpOutlineIcon fontSize="small" onClick={()=>showWithdrawCostInfo()}/></sup></Text>
                 <ContractAddressContainer>
                 <Link to={{pathname:`https://etherscan.io/address/${baskets[0].address}`}} target="_blank" style={{textDecoration:'none', color:"white"}}>
                     

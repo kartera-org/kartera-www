@@ -22,6 +22,8 @@ const getIcon=(imgName:string|undefined)=> {
             return aave;
         case 'snx':
             return snx;
+        case 'mkr':
+                return mkr;
         case 'mmkr':
             return mkr;
         case 'mweth':

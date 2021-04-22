@@ -13,9 +13,11 @@ const Provider: React.FC = ({ children }) => {
 
     const [baskets, setBaskets] = useState<BasketI[]>();
     const [txMessage, setTxMessage] = useState<string>('');
+    const [txAddress, setTxAddress] = useState<string>('');
     const [processingTx, setProcessingTx] = useState<boolean>(false);
     const web3context = useWeb3React();
     const { chainId, account, library, activate, active, deactivate, error } = web3context;
+    const mmk_addr = "0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2";
 
     const fetchAllBasketInfo = useCallback(
       async (userAddress: string, provider: any) => {
@@ -31,6 +33,7 @@ const Provider: React.FC = ({ children }) => {
             numberOfActiveConstituents: 0,
             userBalance: "",
             totalSupply: "",
+            withdrawCost:"",
             constituents: new Array()
           };
           let n=0;
@@ -43,14 +46,15 @@ const Provider: React.FC = ({ children }) => {
             n = basket_i.numberOfConstituents?basket_i.numberOfConstituents : 0;
             basket_i.numberOfActiveConstituents = await basketFunc.NumberOfActiveConstituents(provider, BasketAddresses[i]);
             basket_i.totalSupply = await utils.TotalSupply(provider, BasketAddresses[0]);
-          }catch(e){}
+            basket_i.withdrawCost = await basketFunc.WithdrawCost(provider, BasketAddresses[i]);
+          }catch(e){return;}
           for(let j=0; j < n; j++){
             let constituentAddress='';
             let constituentInfo;
             try{
               constituentAddress = await basketFunc.ConstituentAddress(provider, BasketAddresses[i], j);
               constituentInfo = await basketFunc.ConstituentDetails(provider, BasketAddresses[i],constituentAddress);
-            }catch(e){}
+            }catch(e){return;}
             let cons:ConstituentI = {
               address:constituentAddress,
               name: "",
@@ -67,31 +71,45 @@ const Provider: React.FC = ({ children }) => {
               cons.decimals = details[3];
               cons.basketBalance = ethers.utils.formatUnits(details[2], cons.decimals);
               cons.exchangeRate = await basketFunc.ExchangeRate(provider, BasketAddresses[0], constituentAddress);
-            }catch(e){}
+            }catch(e){return;}
             if(constituentAddress==basketFunc.addr1){
               cons.name = "Ether";
               cons.symbol = "Eth";
               try{
                 cons.userBalance = await utils.getEthBalance(provider, userAddress);
-              }catch(e){}
-            }else{
+              }catch(e){return;}
+            }
+            else if(constituentAddress==mmk_addr){
+              cons.name = "Maker";
+              cons.symbol = "MKR";
+              try{
+                cons.userBalance = await utils.getBalance(provider, constituentAddress, userAddress, cons.decimals);
+              }catch(e){return;}              
+            }
+            else{
               try{
                 cons.name = await utils.Name(provider, constituentAddress);
                 cons.symbol = await utils.Symbol(provider, constituentAddress);
                 cons.userBalance = await utils.getBalance(provider, constituentAddress, userAddress, cons.decimals);
-              }catch(e){}
+              }catch(e){return;}
             }
             basket_i.constituents.push(cons);
           }
-          basket_i.userBalance = await utils.getBalance(provider, BasketAddresses[i], userAddress, 18);
+          try{
+            basket_i.userBalance = await utils.getBalance(provider, BasketAddresses[i], userAddress, 18);
+          }catch(e){
+            console.log('error getting basket balance: ', e.message );
+            return;
+          }
           tBasket.push(basket_i);
         }
         setBaskets(tBasket);
-      }, [setBaskets]
+      }, []
     );
     const unsetTxMessage = useCallback(
       async () =>{
         setTxMessage('');
+        setTxAddress('');
       },[setTxMessage]
     );
 
@@ -102,6 +120,7 @@ const Provider: React.FC = ({ children }) => {
           if(tokenAddress == basketFunc.addr1) {
             try{
               let tx = await basketFunc.MakeEthDeposit(library, basketAddress, amount);
+              setTxAddress(tx);
               console.log('make deposit tx hash: ',  tx);
               tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
               let msg = 'Deposit complete. TXID: ' + tx;
@@ -113,12 +132,13 @@ const Provider: React.FC = ({ children }) => {
             }
           }else{
             let allowance = await utils.getAllowance(basketAddress, tokenAddress, library, account);
-            console.log('allowance: ', allowance.toString() );
+            // console.log('allowance: ', allowance.toString() );
         
             if(new BigNumber(allowance.toString()).gte(new BigNumber(amount))){
               try{
                 let tx = await basketFunc.MakeDeposit(library, basketAddress, tokenAddress, amount);
                 console.log('make deposit tx hash: ',  tx);
+                setTxAddress(tx);
                 tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
                 let msg = 'Deposit complete. TXID: ' + tx;
                 setTxMessage(msg);
@@ -130,6 +150,7 @@ const Provider: React.FC = ({ children }) => {
             }else{
               const contract = utils.getERC20Contract(library, tokenAddress);
               let tx = await utils.ApproveTransfer(library, tokenAddress, basketAddress);
+              setTxAddress(tx);
               console.log('approval tx hash: ',  tx);
               tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
               let msg = 'Approval transaction ID: ' + tx;
@@ -140,6 +161,7 @@ const Provider: React.FC = ({ children }) => {
                   try{
                     done=true;
                     let tx = await basketFunc.MakeDeposit(library, basketAddress, tokenAddress, amount);
+                    setTxAddress(tx);
                     console.log('make deposit tx hash: ',  tx);
                     tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
                     let msg = 'Deposit complete. TXID: ' + tx;
@@ -171,11 +193,12 @@ const Provider: React.FC = ({ children }) => {
           console.log('tokensreturned: ', tokensreturned.toString() );
 
           let allowance = await utils.getAllowance(basketAddress, KarteraTokenAddress, library, account);
-          console.log('allowance: ', allowance.toString() );
+          // console.log('allowance: ', allowance.toString() );
       
           if(new BigNumber(allowance.toString()).gte(new BigNumber(amount))){
             try{
               let tx = await basketFunc.WithdrawLiquidity(library, basketAddress, tokenAddress, amount);
+              setTxAddress(tx);
               console.log('Withdraw transaction tx hash: ',  tx);
               tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
               let msg = 'Withdraw transaction complete. TXID: ' + tx;
@@ -190,6 +213,7 @@ const Provider: React.FC = ({ children }) => {
           }
 
           let tx = await utils.ApproveTransfer(library, KarteraTokenAddress, basketAddress);
+          setTxAddress(tx);
           console.log('approval tx hash: ',  tx);
 
           tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
@@ -201,6 +225,7 @@ const Provider: React.FC = ({ children }) => {
               done=true;
               try{
                 let tx = await basketFunc.WithdrawLiquidity(library, basketAddress, tokenAddress, amount);
+                setTxAddress(tx);
                 console.log('Withdraw transaction tx hash: ',  tx);
                 tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
                 let msg = 'Withdraw transaction complete. TXID: ' + tx;
@@ -223,12 +248,10 @@ const Provider: React.FC = ({ children }) => {
     const handleSwap = useCallback(
       async (basketAddress:string, tokenAddressFrom:string, tokenAddressTo:string, amount:string) =>{
         setProcessingTx(true);
-
-        console.log('testing account #: ', account );
-
         try{
           if(tokenAddressFrom==basketFunc.addr1){
             let tx = await basketFunc.SwapEth(library, basketAddress, tokenAddressFrom, tokenAddressTo, amount);
+            setTxAddress(tx);
             console.log('Swap transaction tx hash: ',  tx);
             tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
             let msg = 'Swap transaction complete. TXID: ' + tx;
@@ -238,12 +261,13 @@ const Provider: React.FC = ({ children }) => {
             const contract = utils.getERC20Contract(library, tokenAddressFrom);
 
             let allowance = await utils.getAllowance(basketAddress, tokenAddressFrom, library, account);
-            console.log('allowance: ', allowance.toString() );
+            // console.log('allowance: ', allowance.toString() );
         
             if(new BigNumber(allowance.toString()).gte(new BigNumber(amount))){
               console.log('here inside direct swap: ',  );
               try{
                 let tx = await basketFunc.Swap(library, basketAddress, tokenAddressFrom, tokenAddressTo, amount);
+                setTxAddress(tx);
                 console.log('Swap transaction tx hash: ',  tx);
                 tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
                 let msg = 'Swap transaction complete. TXID: ' + tx;
@@ -255,6 +279,7 @@ const Provider: React.FC = ({ children }) => {
               }
             }else{
               let tx = await utils.ApproveTransfer(library, tokenAddressFrom, basketAddress);
+              setTxAddress(tx);
               tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
               let msg = 'Approval transaction ID: ' + tx;
               setTxMessage(msg);
@@ -265,6 +290,7 @@ const Provider: React.FC = ({ children }) => {
                   try{
                     done=true;
                     let tx = await basketFunc.Swap(library, basketAddress, tokenAddressFrom, tokenAddressTo, amount);
+                    setTxAddress(tx);
                     console.log('Swap transaction tx hash: ',  tx);
                     tx = tx.substring(0, 10) + '...' + tx.substring(tx.length-4);
                     let msg = 'Swap transaction complete. TXID: ' + tx;
@@ -298,6 +324,18 @@ const Provider: React.FC = ({ children }) => {
       [setTxMessage, setProcessingTx, library]
     );
 
+    const handleTradingAllowed = useCallback(
+      async (basketAddress:string) =>{
+        try{
+          let allowed = await basketFunc.TradingAllowed(library, basketAddress);
+          return allowed;
+        } catch( e ) {
+          return false;
+        }
+      },
+      [setTxMessage, setProcessingTx, library]
+    );
+
     useEffect(() => {
       if (account && library) {
         fetchAllBasketInfo(account, library);
@@ -311,19 +349,20 @@ const Provider: React.FC = ({ children }) => {
         return () => clearInterval(refreshInterval);
       }
     }, [account, library, fetchAllBasketInfo]);
-  
 
     return (
         <Context.Provider
           value={{
             txMessage,
+            txAddress,
             processingTx,
             unsetTxMessage: unsetTxMessage,
             baskets,
             deposit: handleDeposit,
             withdraw: handleWithdraw,
             swap: handleSwap,
-            swapRate: handleSwapRate
+            swapRate: handleSwapRate,
+            tradingAllowed: handleTradingAllowed
           }}
         >
           {children}

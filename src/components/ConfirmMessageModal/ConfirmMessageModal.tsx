@@ -51,17 +51,16 @@ function rand(){
                   <Typography variant='h5'>{props.header}</Typography>
                   <Button size='large' onClick={props.handleClose}>X</Button>
               </div>
-          <div style={{display:'flex', flexDirection:'column', justifyContent:'center'}}>
+          <div style={{display:'flex', flexDirection:'column', justifyContent:'center', whiteSpace: 'pre-wrap'}}>
               {props.message}
           </div>
           <div style={{display:'flex', flexDirection:'row', justifyContent:'flex-end'}}>
-              <Button color='primary' style={{margin:'5px'}} onClick={props.handleConfirm}>Ok</Button>
-              <Button color='secondary' style={{margin:'5px'}} onClick={props.handleClose}>Cancel</Button>
+              <Button style={{margin:'5px', backgroundColor:'#aaFF00'}} onClick={props.handleConfirm}>Ok</Button>
+              <Button style={{margin:'5px'}} onClick={props.handleClose}>Cancel</Button>
           </div>
         </div>
       </div>
     );
-    // console.log('message modal: ', props.Message);
   
     return (
       <div>

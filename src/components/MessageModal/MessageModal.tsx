@@ -52,7 +52,7 @@ function rand(){
                   <Typography variant='h5'>{props.header}</Typography>
                   <Button size='large' onClick={props.handleClose}>X</Button>
               </div>
-          <div style={{display:'flex', flexDirection:'column', justifyContent:'center', lineHeight:2}}>
+          <div style={{display:'flex', flexDirection:'column', justifyContent:'center', lineHeight:2, whiteSpace: 'pre-wrap'}}>
               {props.message}
           </div>
           {props.link && props.link!==""?

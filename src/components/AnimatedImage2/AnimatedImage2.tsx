@@ -3,8 +3,7 @@ import styled from "styled-components";
 import { Grid } from "@material-ui/core";
 import { keyframes } from 'styled-components';
 import CirImage from "assets/images/icons_circle3.png";
-import WhiteBgImage from "assets/images/white_bg1.png";
-import KartImage from "assets/images/kart_icon5.svg";
+import KartImage from "assets/images/kart_icon_75.svg";
 
 const AnimateImage: React.FC = () => {
 

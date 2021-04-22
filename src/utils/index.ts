@@ -24,7 +24,7 @@ export const getAllowance = async (spenderAddress: string, tokenAddress: string,
   const tokenContract = getERC20Contract(provider, tokenAddress);
   let signer = await provider.getSigner(0);
   try {
-    console.log('signer: ', signer );
+    // console.log('signer: ', signer );
     const allowance: string = await tokenContract.allowance(userAddress, spenderAddress);
     return allowance;
   } catch (e) {
@@ -59,9 +59,13 @@ export const getBalance = async (provider: any, tokenAddress: string, userAddres
 
 export const TotalSupply = async (provider:any, tokenAddress:string) =>{
   const contract = getERC20Contract(provider, tokenAddress);
+  try{
   let totalsupply = await contract.totalSupply();
   totalsupply = ethers.utils.formatUnits(totalsupply);
   return totalsupply;
+  }catch(e){
+    throw(e);
+  }
 }
 
 export const Name = async (provider:any, tokenAddress:string) =>{

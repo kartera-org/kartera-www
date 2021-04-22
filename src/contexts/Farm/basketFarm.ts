@@ -3,32 +3,32 @@ import { SwapFarmAddress } from "constants/tokenAddresses";
 import { ethers } from 'ethers';
 import * as utils from "utils/index";
 
-export const BasketFarmContract = (provider:any)=> {
+export const SwapFarmContract = (provider:any)=> {
     return new ethers.Contract(SwapFarmAddress, SwapFarm.abi, provider);
 }
 
 export const NumberOfBaskets= async (provider:any) => {
-    const basketFarmContract = BasketFarmContract(provider);
-    let n = await basketFarmContract.nummberOfBaskets();
+    const swapFarmContract = SwapFarmContract(provider);
+    let n = await swapFarmContract.nummberOfBaskets();
     return n;
 }
 
 export const BasketAddress = async (provider:any, indx:number) =>{
-    const basketFarmContract = BasketFarmContract(provider);
-    let addr = await basketFarmContract.basketAddress(indx);
+    const swapFarmContract = SwapFarmContract(provider);
+    let addr = await swapFarmContract.basketAddress(indx);
     return addr;
 }
 
 export const BasketAllocation = async (provider:any, basketaddr:string) => {
-    const basketFarmContract = BasketFarmContract(provider);
-    let details = await basketFarmContract.basketAllocation(basketaddr);
+    const swapFarmContract = SwapFarmContract(provider);
+    let details = await swapFarmContract.basketAllocation(basketaddr);
     return details;
 }
 
 export const AccumulatedRewards = async (provider:any, userAddress:string, basketaddr:string) => {
-    const basketFarmContract = BasketFarmContract(provider);
+    const swapFarmContract = SwapFarmContract(provider);
     try{
-        let rewards = await basketFarmContract.accumulatedRewards(userAddress, basketaddr);
+        let rewards = await swapFarmContract.accumulatedRewards(userAddress, basketaddr);
         return ethers.utils.formatUnits(rewards, 18);
     }catch(e){
         console.log('e: ', e );
@@ -37,9 +37,9 @@ export const AccumulatedRewards = async (provider:any, userAddress:string, baske
 }
 
 export const LockedTokens = async (provider:any, userAddress:string, basketaddr:string) => {
-    const basketFarmContract = BasketFarmContract(provider);
+    const swapFarmContract = SwapFarmContract(provider);
     try{
-        let lockedtkns = await basketFarmContract.lockedTokens(userAddress, basketaddr)
+        let lockedtkns = await swapFarmContract.lockedTokens(userAddress, basketaddr)
         return ethers.utils.formatUnits(lockedtkns);
     }catch(e){
         console.log('error: ', e );
@@ -48,23 +48,22 @@ export const LockedTokens = async (provider:any, userAddress:string, basketaddr:
 }
 
 export const Deposit = async (provider:any, basketaddr:string, numberOfTokens:string) => {
-    const basketFarmContract = BasketFarmContract(provider);
+    const swapFarmContract = SwapFarmContract(provider);
     let signer = await provider.getSigner(0);
     try{
-        let deposittx = await basketFarmContract.connect(signer).deposit(basketaddr, numberOfTokens);
+        let deposittx = await swapFarmContract.connect(signer).deposit(basketaddr, numberOfTokens);
         return deposittx['hash'];
     }catch(e){
         console.log('error: ', e );
-        throw('error');
-        return;
+        throw(e);
     }
 }
 
 export const Withdraw = async (provider:any, basketaddr:string, numberOfTokens:string) => {
-    const basketFarmContract = BasketFarmContract(provider);
+    const swapFarmContract = SwapFarmContract(provider);
     let signer = await provider.getSigner(0);
     try{
-        let deposittx = await basketFarmContract.connect(signer).withdraw(basketaddr, numberOfTokens);
+        let deposittx = await swapFarmContract.connect(signer).withdraw(basketaddr, numberOfTokens);
         return deposittx['hash'];
     }catch(e){
         console.log('error: ', e );
@@ -73,10 +72,10 @@ export const Withdraw = async (provider:any, basketaddr:string, numberOfTokens:s
 }
 
 export const WithdrawAll = async (provider:any, basketaddr:string) => {
-    const basketFarmContract = BasketFarmContract(provider);
+    const swapFarmContract = SwapFarmContract(provider);
     let signer = await provider.getSigner(0);
     try{
-        let deposittx = await basketFarmContract.connect(signer).withdrawAll(basketaddr);
+        let deposittx = await swapFarmContract.connect(signer).withdrawAll(basketaddr);
         return deposittx['hash'];
     }catch(e){
         console.log('error: ', e );
@@ -85,10 +84,10 @@ export const WithdrawAll = async (provider:any, basketaddr:string) => {
 }
 
 export const Collect = async (provider:any, basketaddr:string) => {
-    const basketFarmContract = BasketFarmContract(provider);
+    const swapFarmContract = SwapFarmContract(provider);
     let signer = await provider.getSigner(0);
     try{
-        let deposittx = await basketFarmContract.connect(signer).collectRewards(basketaddr);
+        let deposittx = await swapFarmContract.connect(signer).collectRewards(basketaddr);
         return deposittx['hash'];
     }catch(e){
         console.log('error: ', e );
