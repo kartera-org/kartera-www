@@ -1,4 +1,4 @@
-// // kovan test net
+// // kovan testnet
 // export const KarteraTokenAddress="0xcF55cea2d4617Ab04bbcEefa18b13a32ce01B6CD";
 // export const TreasuryVesterAddress="0x220248153f43283af28F26e5d9b028E87F1A9307";
 // export const TimelockAddress="0x5F3079D9D1a0aD7AA5D3A0a2876FA468a0bFd725";

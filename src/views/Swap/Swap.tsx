@@ -321,7 +321,8 @@ const Swap: React.FC = () => {
                            <MaxButton onClick={()=>{swapAllTokens()}}>Max</MaxButton>
                             <ChooseToken onClick={ ()=>{ setFromConstituentModalState(true)} } > 
                                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                                    <img src={`${FromIconImage()}`} alt="icon" width="25px" /> &nbsp;
+                                {selectedFromTokenIndx>=0?
+                                    <img src={`${FromIconImage()}`} alt="icon" width="25px" /> :<></>}&nbsp;
                                     {selectedFromTokenIndx>=0 && baskets[0].constituents? baskets[0].constituents[selectedFromTokenIndx].symbol?.toUpperCase() : "Select"}
                                 </div>
                                 <ExpandMoreIcon />

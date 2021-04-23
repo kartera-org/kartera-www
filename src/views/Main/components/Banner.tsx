@@ -9,8 +9,8 @@ const Banner: React.FC = () => {
     <>
             <BannerDiv>
               <StyledText1>Diversified</StyledText1>
-              <StyledText1>Token</StyledText1>
-              <StyledText1>Basket &amp; </StyledText1>
+              <StyledText1>Token &amp; </StyledText1>
+              {/* <StyledText1>Basket &amp; </StyledText1> */}
               <StyledText1>Swap</StyledText1>
               <StyledText1>Protocol</StyledText1>
               <StyledText2> Kartera is the ultimate diversification protocol. Exposure to the basket allows anyone to diversify risk and earn return from swap trades done with the basket. </StyledText2>

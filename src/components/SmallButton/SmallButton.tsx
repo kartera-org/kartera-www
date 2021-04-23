@@ -31,6 +31,7 @@ const StyledButton = styled.div`
     cursor: pointer;
     box-shadow: 0 3px 8px #000;
     @media (max-width: 770px){
+        min-width:50%;
     }
 `;
 

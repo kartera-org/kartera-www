@@ -18,8 +18,8 @@ const Main: React.FC = () => {
           <ButtonGroup>
             <Button link={"/diversify"} text={"Diversify"}/>
             <Button link={"/swap"} text={"Swap"}/>
-            <Button link={"/swapFarmComp"} text={"Basket Farm"}/>
-            <Button link={"/kartFarmComp"} text={"Kart Farm"}/>
+            <Button link={"/farm"} text={"Farm"}/>
+            <Button link={"/governance"} text={"Governance"}/>
           </ButtonGroup>
       </Container>
       );
